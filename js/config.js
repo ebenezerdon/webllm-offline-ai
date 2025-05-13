@@ -140,4 +140,5 @@ export const ELEMENT_IDS = {
   modelDownloadSize: 'model-download-size',
   modelVram: 'model-vram',
   modelParams: 'model-params',
+  topStatus: 'top-status',
 }

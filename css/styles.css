@@ -357,3 +357,8 @@ button.secondary-button:hover:not(:disabled) {
     opacity: 1;
   }
 }
+
+.top-status-container {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0;
+}

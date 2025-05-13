@@ -15,6 +15,7 @@ import {
   getLastUsedModel,
   saveLastUsedModel,
   clearConversations,
+  getLastConversation,
 } from './utils/db.js'
 
 class App {
@@ -34,6 +35,9 @@ class App {
     this.setupModelUI()
     this.logSystemInfo()
 
+    // Load conversation history immediately
+    await this.loadConversationWithoutModel()
+
     // Try to auto-load the last used model
     this.tryLoadLastUsedModel()
   }
@@ -48,6 +52,7 @@ class App {
       if (lastModel && lastModel.modelId) {
         logStatus(
           `Found previously used model: loading ${lastModel.modelId}...`,
+          true,
         )
         logDebug(`Auto-loading model: ${lastModel.modelId}`)
 
@@ -65,13 +70,39 @@ class App {
         // Load the model automatically
         await this.handleLoadModelClick()
 
-        // Load the last conversation after model is loaded
-        await this.loadLastConversation()
+        // No need to load conversation again as we already loaded it
       } else {
         logDebug('No previous model found in database')
       }
     } catch (error) {
       logDebug(`Error loading last model: ${error.message}`)
+    }
+  }
+
+  /**
+   * Load conversation history without requiring a model to be loaded
+   */
+  async loadConversationWithoutModel() {
+    try {
+      const conversationHistory = await getLastConversation()
+
+      if (conversationHistory && conversationHistory.length > 0) {
+        // Set the conversation in the model
+        this.model.conversation = conversationHistory
+
+        // Display conversation without model
+        this.model.displayConversation()
+
+        // No need to show status message - chat history is visible
+        logDebug(
+          `Loaded conversation with ${conversationHistory.length} messages`,
+        )
+        return true
+      }
+      return false
+    } catch (error) {
+      logDebug(`Error loading conversation: ${error.message}`)
+      return false
     }
   }
 
@@ -87,7 +118,7 @@ class App {
     try {
       const loaded = await this.model.loadLastConversation()
       if (loaded) {
-        logStatus('Restored your previous conversation')
+        // No need to show redundant status message
       }
     } catch (error) {
       logDebug(`Error loading conversation: ${error.message}`)
@@ -139,6 +170,7 @@ class App {
       debug: this.elements.debug,
       status: this.elements.status,
       output: this.elements.output,
+      topStatus: this.elements.topStatus,
     })
   }
 
@@ -249,7 +281,7 @@ class App {
       ? selectedOption.textContent
       : selectedModel
 
-    logStatus(`Loading model: ${modelName}...`)
+    logStatus(`Loading model: ${modelName}...`, true)
 
     try {
       await this.model.loadModel(selectedModel)
