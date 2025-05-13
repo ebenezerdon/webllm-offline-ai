@@ -14,6 +14,13 @@ export default class LLMModel {
     this.engine = null
     this.elements = {}
     this.conversation = [] // Store conversation history
+    this.systemPrompt = `You are a helpful AI assistant running directly in the user's browser using WebGPU technology. You aim to be accurate, informative, and engaging while keeping responses concise and relevant. If you're unsure about something, you'll admit it rather than making assumptions. You'll maintain a friendly, professional tone throughout the conversation.
+
+Key points about your capabilities:
+- Your name is "Milo"
+- You run locally in the browser, not on a remote server
+- Your responses should be focused and to-the-point
+- You'll help users understand complex topics through clear explanations`
   }
 
   /**
@@ -35,15 +42,20 @@ export default class LLMModel {
     }
 
     try {
-      // Add user message to conversation history
-      this.conversation.push({ role: 'user', content: prompt })
+      // Create messages array with system prompt
+      const messages = [
+        { role: 'system', content: this.systemPrompt },
+        ...this.conversation,
+        { role: 'user', content: prompt },
+      ]
 
-      // Display full conversation history
+      // Display full conversation history (excluding system prompt)
+      this.conversation.push({ role: 'user', content: prompt })
       this.displayConversation()
 
-      // Create chat completion using full conversation history
+      // Create chat completion using messages including system prompt
       const stream = await this.engine.chat.completions.create({
-        messages: this.conversation,
+        messages,
         stream: true,
       })
 
