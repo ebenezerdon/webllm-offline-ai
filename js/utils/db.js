@@ -6,7 +6,7 @@
 const db = new Dexie('webllm-chat')
 
 // Define database schema with tables and indexes
-db.version(1).stores({
+db.version(20).stores({
   conversations: '++id, timestamp',
   preferences: 'key',
   models: 'id',
