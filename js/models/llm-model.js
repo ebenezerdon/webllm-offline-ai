@@ -8,6 +8,7 @@ import {
   updateProgress,
   checkWebGPUSupport,
 } from '../utils/ui.js'
+import { saveConversation } from '../utils/db.js'
 
 export default class LLMModel {
   constructor() {
@@ -154,6 +155,14 @@ Key points about your capabilities:
 
       // Add assistant message to conversation history
       this.conversation.push({ role: 'assistant', content: assistantResponse })
+
+      // Save conversation to the database
+      try {
+        await saveConversation(this.conversation)
+        logDebug('Conversation saved to database')
+      } catch (err) {
+        logDebug('Failed to save conversation: ' + err.message)
+      }
 
       return true
     } catch (error) {

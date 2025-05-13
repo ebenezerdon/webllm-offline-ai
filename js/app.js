@@ -11,6 +11,7 @@ import {
 } from './utils/logger.js'
 import { populateModelSelect, updateModelInfo } from './utils/ui.js'
 import LLMModel from './models/llm-model.js'
+import { getLastUsedModel, saveLastUsedModel } from './utils/db.js'
 
 class App {
   constructor() {
@@ -28,6 +29,43 @@ class App {
     this.initLogger()
     this.setupModelUI()
     this.logSystemInfo()
+
+    // Try to auto-load the last used model
+    this.tryLoadLastUsedModel()
+  }
+
+  /**
+   * Try to load the last used model from database
+   */
+  async tryLoadLastUsedModel() {
+    try {
+      const lastModel = await getLastUsedModel()
+
+      if (lastModel && lastModel.modelId) {
+        logStatus(
+          `Found previously used model: loading ${lastModel.modelId}...`,
+        )
+        logDebug(`Auto-loading model: ${lastModel.modelId}`)
+
+        // Set the model dropdown to the last used model
+        const modelSelect = this.elements.modelSelect
+        for (let i = 0; i < modelSelect.options.length; i++) {
+          if (modelSelect.options[i].value === lastModel.modelId) {
+            modelSelect.selectedIndex = i
+            this.updateModelInfoDisplay()
+            this.updateResourceWarning()
+            break
+          }
+        }
+
+        // Load the model automatically
+        this.handleLoadModelClick()
+      } else {
+        logDebug('No previous model found in database')
+      }
+    } catch (error) {
+      logDebug(`Error loading last model: ${error.message}`)
+    }
   }
 
   /**
@@ -164,6 +202,14 @@ class App {
     try {
       await this.model.loadModel(selectedModel)
       this.setInputsState(true)
+
+      // Save the model as last used
+      const modelInfo = {
+        name: modelName,
+        timestamp: new Date().toISOString(),
+      }
+      await saveLastUsedModel(selectedModel, modelInfo)
+      logDebug(`Saved ${selectedModel} as last used model`)
     } catch (error) {
       logDebug(`Error in handleLoadModelClick: ${error.message}`)
     } finally {
