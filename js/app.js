@@ -107,13 +107,14 @@ class App {
     const prompt = this.elements.prompt.value.trim()
     if (!prompt) return
 
-    this.elements.output.textContent = `You: ${prompt}\n\nAssistant: `
+    // Clear the input field
     this.elements.prompt.value = ''
 
     // Disable inputs during generation
     this.setInputsState(false)
 
     try {
+      // Let the model handle adding the message to chat history and UI updates
       await this.model.generateResponse(prompt)
     } catch (error) {
       logDebug(`Error in handleFormSubmit: ${error.message}`)
@@ -192,9 +193,8 @@ class App {
    */
   setInputsState(enabled) {
     this.elements.prompt.disabled = !enabled
-    if (this.elements.form.querySelector('button[type="submit"]')) {
-      this.elements.form.querySelector('button[type="submit"]').disabled =
-        !enabled
+    if (this.elements.submitButton) {
+      this.elements.submitButton.disabled = !enabled
     }
   }
 

@@ -13,6 +13,7 @@ export default class LLMModel {
   constructor() {
     this.engine = null
     this.elements = {}
+    this.conversation = [] // Store conversation history
   }
 
   /**
@@ -34,16 +35,42 @@ export default class LLMModel {
     }
 
     try {
+      // Add user message to conversation history
+      this.conversation.push({ role: 'user', content: prompt })
+
+      // Display full conversation history
+      this.displayConversation()
+
+      // Create chat completion using full conversation history
       const stream = await this.engine.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
+        messages: this.conversation,
         stream: true,
       })
 
+      let assistantResponse = ''
+
       for await (const chunk of stream) {
         const token = chunk.choices[0].delta.content || ''
-        this.elements.output.textContent += token
+        assistantResponse += token
+
+        // Update just the assistant's current response
+        const outputEl = this.elements.output
+        const lastChild = outputEl.lastChild
+
+        if (lastChild && lastChild.className === 'assistant-response') {
+          lastChild.textContent = assistantResponse
+        } else {
+          const responseEl = document.createElement('div')
+          responseEl.className = 'assistant-response'
+          responseEl.textContent = assistantResponse
+          outputEl.appendChild(responseEl)
+        }
+
         this.elements.output.scrollTop = this.elements.output.scrollHeight
       }
+
+      // Add assistant message to conversation history
+      this.conversation.push({ role: 'assistant', content: assistantResponse })
 
       return true
     } catch (error) {
@@ -59,14 +86,74 @@ export default class LLMModel {
   }
 
   /**
+   * Display the full conversation history
+   * @param {string} systemMessage - Optional system message to display
+   * @param {boolean} isError - Whether the system message is an error
+   */
+  displayConversation(systemMessage = null, isError = false) {
+    const outputEl = this.elements.output
+    outputEl.innerHTML = ''
+
+    // Show system message if provided
+    if (systemMessage) {
+      const systemEl = document.createElement('div')
+      systemEl.className = isError ? 'error-message' : 'system-message'
+      systemEl.textContent = systemMessage
+      outputEl.appendChild(systemEl)
+    }
+
+    // Show conversation history
+    this.conversation.forEach((message) => {
+      const messageEl = document.createElement('div')
+      messageEl.className = `${message.role}-message`
+
+      const roleLabel = document.createElement('div')
+      roleLabel.className = 'role-label'
+      roleLabel.textContent = message.role === 'user' ? 'You:' : 'Assistant:'
+
+      const contentEl = document.createElement('div')
+      contentEl.className = `${message.role}-content`
+      contentEl.textContent = message.content
+
+      messageEl.appendChild(roleLabel)
+      messageEl.appendChild(contentEl)
+      outputEl.appendChild(messageEl)
+    })
+
+    // Add placeholder for incoming assistant response
+    if (
+      this.conversation.length > 0 &&
+      this.conversation[this.conversation.length - 1].role === 'user'
+    ) {
+      const placeholderEl = document.createElement('div')
+      placeholderEl.className = 'assistant-message'
+
+      const roleLabel = document.createElement('div')
+      roleLabel.className = 'role-label'
+      roleLabel.textContent = 'Assistant:'
+
+      const responseEl = document.createElement('div')
+      responseEl.className = 'assistant-response'
+      responseEl.textContent = ''
+
+      placeholderEl.appendChild(roleLabel)
+      placeholderEl.appendChild(responseEl)
+      outputEl.appendChild(placeholderEl)
+    }
+  }
+
+  /**
    * Load a model by ID
    * @param {string} modelId - Model identifier
    * @returns {Promise<void>}
    */
   async loadModel(modelId) {
     try {
-      // Reset UI state
-      this.elements.output.textContent = 'Initializing...'
+      // Reset UI state and conversation
+      this.conversation = []
+
+      // Show initializing message
+      this.displayConversation('Initializing...')
 
       logStatus('Checking browser compatibility...')
       checkWebGPUSupport()
@@ -80,7 +167,11 @@ export default class LLMModel {
       logStatus(
         `Starting model download (${downloadSize}). This may take a while for the first time...`,
       )
-      this.elements.output.textContent = `Starting model download (${downloadSize}). This may take a while for the first time...`
+
+      // Update loading message
+      this.displayConversation(
+        `Starting model download (${downloadSize}). This may take a while for the first time...`,
+      )
 
       let progressReceived = false
       let downloadStartTime = Date.now()
@@ -136,7 +227,10 @@ export default class LLMModel {
             percent,
           )
 
-          this.elements.output.textContent = `Loading model... ${percent}%${remainingTime}`
+          // Update loading message
+          this.displayConversation(
+            `Loading model... ${percent}%${remainingTime}`,
+          )
           logStatus(`Download progress: ${percent}%${remainingTime}`)
         },
         useIndexedDBCache: true,
@@ -148,7 +242,9 @@ export default class LLMModel {
         logDebug('No progress callbacks were received during loading')
       }
 
-      this.elements.output.textContent = `Model ready in ${loadTime}s. Ask me something!`
+      // Display welcome message
+      this.displayConversation(`Model ready in ${loadTime}s. Ask me something!`)
+
       logStatus(`Model ${modelId} loaded successfully in ${loadTime}s`)
 
       return true
@@ -160,6 +256,10 @@ export default class LLMModel {
           Object.getOwnPropertyNames(error),
         )}`,
       )
+
+      // Display error message as a system message
+      this.displayConversation(`Error loading model: ${error.message}`, true)
+
       logStatus('Check debug log for more details')
       throw error
     }
