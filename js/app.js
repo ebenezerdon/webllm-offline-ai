@@ -3,7 +3,12 @@
  */
 import { prebuiltAppConfig } from 'https://esm.run/@mlc-ai/web-llm@0.2.79'
 import { MODEL_DATA, MODEL_SIZES, ELEMENT_IDS } from './config.js'
-import { initLogger, logDebug, logBrowserInfo } from './utils/logger.js'
+import {
+  initLogger,
+  logDebug,
+  logBrowserInfo,
+  logStatus,
+} from './utils/logger.js'
 import { populateModelSelect, updateModelInfo } from './utils/ui.js'
 import LLMModel from './models/llm-model.js'
 
@@ -145,6 +150,16 @@ class App {
     // Disable inputs during loading
     this.isModelLoading = true
     this.setLoadingState(true)
+
+    const modelOptions = Array.from(this.elements.modelSelect.options)
+    const selectedOption = modelOptions.find(
+      (opt) => opt.value === selectedModel,
+    )
+    const modelName = selectedOption
+      ? selectedOption.textContent
+      : selectedModel
+
+    logStatus(`Loading model: ${modelName}...`)
 
     try {
       await this.model.loadModel(selectedModel)

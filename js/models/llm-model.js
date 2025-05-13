@@ -169,12 +169,60 @@ export default class LLMModel {
       )
 
       // Update loading message
-      this.displayConversation(
-        `Starting model download (${downloadSize}). This may take a while for the first time...`,
-      )
+      this.displayConversation(`Loading model: ${modelId} (${downloadSize})...`)
 
       let progressReceived = false
       let downloadStartTime = Date.now()
+
+      // Setup cache loading indicator with indeterminate progress
+      let cacheLoadingInterval = null
+      let cacheLoadingDots = 0
+      let cacheLoadingElapsed = 0
+
+      // Show the progress container
+      this.elements.progressContainer.style.display = 'block'
+
+      // Enable indeterminate progress animation
+      this.elements.progressFill.className = 'progress-fill indeterminate'
+
+      const updateCacheLoadingIndicator = () => {
+        if (!progressReceived) {
+          cacheLoadingDots = (cacheLoadingDots % 3) + 1
+          cacheLoadingElapsed = Math.floor(
+            (Date.now() - downloadStartTime) / 1000,
+          )
+          const dots = '.'.repeat(cacheLoadingDots)
+          const spaces = ' '.repeat(3 - cacheLoadingDots)
+
+          // Try to simulate progress based on elapsed time for a smoother experience
+          // Most cache loads complete within 5-15 seconds
+          const simulatedProgress = Math.min(
+            90,
+            Math.floor(cacheLoadingElapsed / 0.15),
+          )
+
+          // Update text status
+          this.displayConversation(
+            `Loading from cache${dots}${spaces} (${cacheLoadingElapsed}s elapsed)`,
+          )
+
+          // Update progress text
+          this.elements.progressText.textContent = `Loading... (${cacheLoadingElapsed}s)`
+
+          // If no real progress received but significant time elapsed, show simulated progress
+          if (cacheLoadingElapsed > 2) {
+            this.elements.progressFill.className = 'progress-fill'
+            this.elements.progressFill.style.marginLeft = '0'
+            this.elements.progressFill.style.width = `${simulatedProgress}%`
+          }
+        }
+      }
+
+      // Start cache loading indicator
+      cacheLoadingInterval = setInterval(updateCacheLoadingIndicator, 500)
+
+      // Initial call to show immediately
+      updateCacheLoadingIndicator()
 
       this.engine = await CreateMLCEngine(modelId, {
         initProgressCallback: (progress) => {
@@ -182,42 +230,57 @@ export default class LLMModel {
 
           // Log the raw progress for debugging
           logDebug(`Raw progress value: ${JSON.stringify(progress)}`)
+          logDebug(`Progress type: ${typeof progress}`)
 
           let percent = 0
+          let isCache = false
 
-          // Check if progress is an object with progress property
-          if (
-            progress &&
-            typeof progress === 'object' &&
-            'progress' in progress
-          ) {
-            percent = Math.floor(progress.progress * 100)
-            logDebug(`Progress from object: ${percent}%`)
-          }
-          // Check if progress is a number directly
-          else if (typeof progress === 'number' && !isNaN(progress)) {
-            percent = Math.floor(progress * 100)
-            logDebug(`Progress from number: ${percent}%`)
-          }
-          // Fall back to task info if available
-          else if (progress && typeof progress === 'object' && progress.text) {
-            logStatus(`Status: ${progress.text}`)
-            if (progress.phase === 'download') {
-              // Try to extract a percentage from the text if it exists
-              const percentMatch = progress.text.match(/(\d+)%/)
-              if (percentMatch) {
+          // First check if it's a cache loading operation
+          if (progress && typeof progress === 'object' && progress.text) {
+            const cacheMatch = progress.text.match(/cache\[(\d+)\/(\d+)\]/)
+            if (cacheMatch && cacheMatch.length >= 3) {
+              isCache = true
+              const [_, current, total] = cacheMatch
+              percent = Math.floor((parseInt(current) / parseInt(total)) * 100)
+              logDebug(
+                `Cache loading progress: ${current}/${total} = ${percent}%`,
+              )
+            }
+            // If not cache loading, check for regular progress
+            else if ('progress' in progress) {
+              percent = Math.floor(progress.progress * 100)
+              logDebug(
+                `Regular progress: ${percent}% (progress.progress = ${progress.progress})`,
+              )
+            }
+            // Try to extract percentage from text as fallback
+            else {
+              const percentMatch = progress.text.match(/(\d+)% completed/)
+              if (percentMatch && percentMatch.length >= 2) {
                 percent = parseInt(percentMatch[1])
-                logDebug(`Progress from text: ${percent}%`)
+                logDebug(
+                  `Progress from text: ${percent}% (matched from: ${progress.text})`,
+                )
               }
             }
-          } else {
-            logStatus('Downloading model... (progress unknown)')
-            return
           }
+          // Handle direct number progress
+          else if (typeof progress === 'number' && !isNaN(progress)) {
+            percent = Math.floor(progress * 100)
+            logDebug(`Progress from number: ${percent}% (raw = ${progress})`)
+          }
+
+          // Ensure percent is valid
+          percent = Math.max(0, Math.min(100, percent))
+          logDebug(`Final calculated progress: ${percent}%`)
 
           // Calculate estimated time remaining
           const elapsedMs = Date.now() - downloadStartTime
           const remainingTime = calculateRemainingTime(elapsedMs, percent)
+
+          // Reset indeterminate styling when we have real progress
+          this.elements.progressFill.className = 'progress-fill'
+          this.elements.progressFill.style.marginLeft = '0'
 
           // Update progress bar and status
           updateProgress(
@@ -228,18 +291,40 @@ export default class LLMModel {
           )
 
           // Update loading message
+          const messagePrefix = isCache ? 'Loading from cache' : 'Loading model'
           this.displayConversation(
-            `Loading model... ${percent}%${remainingTime}`,
+            `${messagePrefix}... ${percent}%${remainingTime}`,
           )
-          logStatus(`Download progress: ${percent}%${remainingTime}`)
+          logStatus(
+            `${
+              isCache ? 'Cache' : 'Download'
+            } progress: ${percent}%${remainingTime}`,
+          )
         },
         useIndexedDBCache: true,
       })
 
+      // Stop cache loading indicator
+      clearInterval(cacheLoadingInterval)
+
+      // Reset progress bar styling and show complete
+      this.elements.progressFill.className = 'progress-fill'
+      this.elements.progressFill.style.marginLeft = '0'
+      this.elements.progressFill.style.width = '100%'
+      this.elements.progressText.textContent = '100%'
+
+      // Short delay before hiding progress to show completion
+      setTimeout(() => {
+        this.elements.progressContainer.style.display = 'none'
+      }, 500)
+
       const loadTime = ((Date.now() - downloadStartTime) / 1000).toFixed(1)
 
       if (!progressReceived) {
-        logDebug('No progress callbacks were received during loading')
+        logDebug(
+          'No progress callbacks were received - likely loaded from cache',
+        )
+        logStatus(`Model loaded from cache in ${loadTime}s`)
       }
 
       // Display welcome message
