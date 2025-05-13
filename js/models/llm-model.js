@@ -208,36 +208,71 @@ Key points about your capabilities:
    * Display the full conversation history
    * @param {string} systemMessage - Optional system message to display
    * @param {boolean} isError - Whether the system message is an error
+   * @param {boolean} appendSystemMessage - Whether to append system message without clearing the conversation
    */
-  displayConversation(systemMessage = null, isError = false) {
+  displayConversation(
+    systemMessage = null,
+    isError = false,
+    appendSystemMessage = false,
+  ) {
     const outputEl = this.elements.output
-    outputEl.innerHTML = ''
 
-    // Show system message if provided
-    if (systemMessage) {
-      const systemEl = document.createElement('div')
-      systemEl.className = isError ? 'error-message' : 'system-message'
-      systemEl.textContent = systemMessage
-      outputEl.appendChild(systemEl)
+    // Only clear output if we're not appending
+    if (!appendSystemMessage) {
+      outputEl.innerHTML = ''
     }
 
-    // Show conversation history
-    this.conversation.forEach((message) => {
-      const messageEl = document.createElement('div')
-      messageEl.className = `${message.role}-message`
+    // Show conversation history if not appending or if the output is empty
+    if (!appendSystemMessage || outputEl.innerHTML === '') {
+      // Show conversation history
+      this.conversation.forEach((message) => {
+        const messageEl = document.createElement('div')
+        messageEl.className = `${message.role}-message`
 
-      const roleLabel = document.createElement('div')
-      roleLabel.className = 'role-label'
-      roleLabel.textContent = message.role === 'user' ? 'You:' : 'Assistant:'
+        const roleLabel = document.createElement('div')
+        roleLabel.className = 'role-label'
+        roleLabel.textContent = message.role === 'user' ? 'You:' : 'Assistant:'
 
-      const contentEl = document.createElement('div')
-      contentEl.className = `${message.role}-content`
-      contentEl.textContent = message.content
+        const contentEl = document.createElement('div')
+        contentEl.className = `${message.role}-content`
+        contentEl.textContent = message.content
 
-      messageEl.appendChild(roleLabel)
-      messageEl.appendChild(contentEl)
-      outputEl.appendChild(messageEl)
-    })
+        messageEl.appendChild(roleLabel)
+        messageEl.appendChild(contentEl)
+        outputEl.appendChild(messageEl)
+      })
+    }
+
+    // Show system message if provided and we're not already showing the same message
+    if (systemMessage) {
+      // Check if we already have this system message displayed (to avoid duplicates)
+      const existingSystemMessages = outputEl.querySelectorAll(
+        '.system-message, .error-message',
+      )
+      let isDuplicate = false
+
+      existingSystemMessages.forEach((el) => {
+        if (el.textContent === systemMessage) {
+          isDuplicate = true
+        }
+      })
+
+      // Only add if not a duplicate
+      if (!isDuplicate) {
+        const systemEl = document.createElement('div')
+        systemEl.className = isError ? 'error-message' : 'system-message'
+        systemEl.textContent = systemMessage
+
+        // If we're appending and there's already a system message, replace it
+        if (appendSystemMessage && existingSystemMessages.length > 0) {
+          existingSystemMessages[existingSystemMessages.length - 1].replaceWith(
+            systemEl,
+          )
+        } else {
+          outputEl.appendChild(systemEl)
+        }
+      }
+    }
 
     // Add placeholder for incoming assistant response
     if (
@@ -251,14 +286,12 @@ Key points about your capabilities:
       roleLabel.className = 'role-label'
       roleLabel.textContent = 'Assistant:'
 
-      const responseEl = document.createElement('div')
-      responseEl.className = 'assistant-response'
-      responseEl.textContent = ''
-
       placeholderEl.appendChild(roleLabel)
-      placeholderEl.appendChild(responseEl)
       outputEl.appendChild(placeholderEl)
     }
+
+    // Scroll to bottom
+    outputEl.scrollTop = outputEl.scrollHeight
   }
 
   /**
@@ -268,13 +301,13 @@ Key points about your capabilities:
    */
   async loadModel(modelId) {
     try {
-      // Reset UI state and conversation
-      this.conversation = []
+      // Store current conversation
+      const currentConversation = [...this.conversation]
 
-      // Show initializing message
-      this.displayConversation('Initializing...')
+      // Don't modify the chat display during loading, just use the status area
+      logStatus('Initializing...', true)
 
-      logStatus('Checking browser compatibility...')
+      logStatus('Checking browser compatibility...', true)
       checkWebGPUSupport()
 
       const selectedOption = Array.from(this.elements.modelSelect.options).find(
@@ -285,10 +318,8 @@ Key points about your capabilities:
       logDebug(`Starting to load model: ${modelId} (size: ${downloadSize})`)
       logStatus(
         `Starting model download (${downloadSize}). This may take a while for the first time...`,
+        true,
       )
-
-      // Update loading message
-      this.displayConversation(`Loading model: ${modelId} (${downloadSize})...`)
 
       let progressReceived = false
       let downloadStartTime = Date.now()
@@ -304,37 +335,17 @@ Key points about your capabilities:
       // Enable indeterminate progress animation
       this.elements.progressFill.className = 'progress-fill indeterminate'
 
+      // Callback to update cache loading status
       const updateCacheLoadingIndicator = () => {
-        if (!progressReceived) {
-          cacheLoadingDots = (cacheLoadingDots % 3) + 1
-          cacheLoadingElapsed = Math.floor(
-            (Date.now() - downloadStartTime) / 1000,
-          )
-          const dots = '.'.repeat(cacheLoadingDots)
-          const spaces = ' '.repeat(3 - cacheLoadingDots)
+        cacheLoadingDots = (cacheLoadingDots + 1) % 4
+        const dots = '.'.repeat(cacheLoadingDots)
+        cacheLoadingElapsed += 0.5
 
-          // Try to simulate progress based on elapsed time for a smoother experience
-          // Most cache loads complete within 5-15 seconds
-          const simulatedProgress = Math.min(
-            90,
-            Math.floor(cacheLoadingElapsed / 0.15),
-          )
-
-          // Update text status
-          this.displayConversation(
-            `Loading from cache${dots}${spaces} (${cacheLoadingElapsed}s elapsed)`,
-          )
-
-          // Update progress text
-          this.elements.progressText.textContent = `Loading... (${cacheLoadingElapsed}s)`
-
-          // If no real progress received but significant time elapsed, show simulated progress
-          if (cacheLoadingElapsed > 2) {
-            this.elements.progressFill.className = 'progress-fill'
-            this.elements.progressFill.style.marginLeft = '0'
-            this.elements.progressFill.style.width = `${simulatedProgress}%`
-          }
-        }
+        // Update status message instead of chat display
+        logStatus(
+          `Loading from cache${dots} (${cacheLoadingElapsed.toFixed(1)}s)`,
+          true,
+        )
       }
 
       // Start cache loading indicator
@@ -409,16 +420,9 @@ Key points about your capabilities:
             percent,
           )
 
-          // Update loading message
+          // Update status message instead of chat display
           const messagePrefix = isCache ? 'Loading from cache' : 'Loading model'
-          this.displayConversation(
-            `${messagePrefix}... ${percent}%${remainingTime}`,
-          )
-          logStatus(
-            `${
-              isCache ? 'Cache' : 'Download'
-            } progress: ${percent}%${remainingTime}`,
-          )
+          logStatus(`${messagePrefix}... ${percent}%${remainingTime}`, true)
         },
         useIndexedDBCache: true,
       })
@@ -443,17 +447,34 @@ Key points about your capabilities:
         logDebug(
           'No progress callbacks were received - likely loaded from cache',
         )
-        logStatus(`Model loaded from cache in ${loadTime}s`)
+        logStatus(`Model loaded from cache in ${loadTime}s`, true)
       }
 
-      // Display welcome message
-      this.displayConversation(`Model ready in ${loadTime}s. Ask me something!`)
+      // Log status message of completion
+      logStatus(`Model ${modelId} loaded successfully in ${loadTime}s`, true)
 
-      logStatus(`Model ${modelId} loaded successfully in ${loadTime}s`)
+      // Clear any existing system messages before adding model ready message
+      const outputEl = this.elements.output
+      const systemMessages = outputEl.querySelectorAll(
+        '.system-message, .error-message',
+      )
+      systemMessages.forEach((el) => el.remove())
+
+      // Add a small indicator that the model is ready if there's chat history
+      if (this.conversation.length > 0) {
+        const systemEl = document.createElement('div')
+        systemEl.className = 'system-message'
+        systemEl.textContent = 'Model ready. Ask me something!'
+        outputEl.appendChild(systemEl)
+        outputEl.scrollTop = outputEl.scrollHeight
+      } else {
+        // If no chat history, display a welcome message
+        this.displayConversation('Model ready. Ask me something!')
+      }
 
       return true
     } catch (error) {
-      logError(`Failed to load model: ${error.message}`)
+      logError(`Failed to load model: ${error.message}`, true)
       logDebug(
         `Detailed error: ${JSON.stringify(
           error,
@@ -461,10 +482,23 @@ Key points about your capabilities:
         )}`,
       )
 
-      // Display error message as a system message
-      this.displayConversation(`Error loading model: ${error.message}`, true)
+      // Use the status area for error messages
+      logStatus('Check debug log for more details', false)
 
-      logStatus('Check debug log for more details')
+      // Clear any existing system messages before adding error message
+      const outputEl = this.elements.output
+      const systemMessages = outputEl.querySelectorAll(
+        '.system-message, .error-message',
+      )
+      systemMessages.forEach((el) => el.remove())
+
+      // Add error indicator to the chat
+      const systemEl = document.createElement('div')
+      systemEl.className = 'error-message'
+      systemEl.textContent = 'Error loading model. Please try again.'
+      outputEl.appendChild(systemEl)
+      outputEl.scrollTop = outputEl.scrollHeight
+
       throw error
     }
   }

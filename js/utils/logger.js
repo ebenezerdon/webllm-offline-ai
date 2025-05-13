@@ -5,6 +5,7 @@
 let debugEl
 let statusEl
 let outputEl
+let topStatusEl
 
 /**
  * Initialize the logger with DOM elements
@@ -14,6 +15,7 @@ export const initLogger = (elements) => {
   debugEl = elements.debug
   statusEl = elements.status
   outputEl = elements.output
+  topStatusEl = elements.topStatus
 }
 
 /**
@@ -32,24 +34,47 @@ export const logDebug = (message) => {
 /**
  * Update status message in the UI
  * @param {string} message - Status message
+ * @param {boolean} isModelStatus - Whether this is a model loading status (to be displayed at the top)
  */
-export const logStatus = (message) => {
+export const logStatus = (message, isModelStatus = false) => {
   if (!statusEl) return
 
-  statusEl.textContent = message
+  if (isModelStatus && topStatusEl) {
+    topStatusEl.textContent = message
+  } else {
+    statusEl.textContent = message
+  }
+
   logDebug(`Status: ${message}`)
 }
 
 /**
  * Log error message to the UI
  * @param {string} message - Error message
+ * @param {boolean} isModelError - Whether this is a model loading error (to be displayed at the top)
  */
-export const logError = (message) => {
+export const logError = (message, isModelError = false) => {
   if (!outputEl) return
 
-  outputEl.innerHTML += `<div class="error">${message}</div>`
+  if (isModelError && topStatusEl) {
+    topStatusEl.textContent = message
+    topStatusEl.classList.add('error')
+  } else {
+    outputEl.innerHTML += `<div class="error">${message}</div>`
+  }
+
   logDebug(`ERROR: ${message}`)
   console.error(message)
+}
+
+/**
+ * Clear the top status message
+ */
+export const clearTopStatus = () => {
+  if (topStatusEl) {
+    topStatusEl.textContent = ''
+    topStatusEl.classList.remove('error')
+  }
 }
 
 /**

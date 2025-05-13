@@ -46,13 +46,19 @@
       <strong>Note:</strong> Large models require significant GPU resources. If
       your device has limited capabilities, consider using smaller models.
     </div>
-    <div id="output">Select a model and click "Load Model" to begin</div>
-    <div id="progress-container" style="display: none">
-      <div class="progress-bar">
-        <div id="progress-fill" class="progress-fill"></div>
+
+    <!-- New loading status area at the top -->
+    <div id="top-status-container" class="top-status-container">
+      <div id="top-status" class="top-status"></div>
+      <div id="progress-container" style="display: none">
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="progress-text" class="progress-text">0%</div>
       </div>
-      <div id="progress-text" class="progress-text">0%</div>
     </div>
+
+    <div id="output">Select a model and click "Load Model" to begin</div>
     <form id="chat-form">
       <input id="prompt" placeholder="Type your question..." disabled />
       <button id="submit-button" type="submit" disabled>Send</button>
