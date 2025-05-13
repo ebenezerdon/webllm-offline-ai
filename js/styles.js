@@ -3,37 +3,151 @@
  */
 export const styles = `
   body {
-    font-family: sans-serif;
-    max-width: 600px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    max-width: 800px;
     margin: 2rem auto;
     padding: 1rem;
+    line-height: 1.5;
+    color: #333;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #1890ff;
   }
 
   #output {
-    background: #f4f4f4;
-    padding: 1rem;
-    min-height: 200px;
-    border: 1px solid #ccc;
+    background: #f9f9f9;
+    padding: 1.25rem;
+    min-height: 300px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
     white-space: pre-wrap;
     overflow-y: auto;
-    max-height: 400px;
+    max-height: 500px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
+  }
+
+  /* Chat conversation styles */
+  .user-message,
+  .assistant-message {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    animation: fade-in 0.3s ease-in-out;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .user-message {
+    background-color: #e6f7ff;
+    border-left: 4px solid #1890ff;
+    margin-left: 2rem;
+    margin-right: 0.5rem;
+  }
+
+  .assistant-message {
+    background-color: #f6ffed;
+    border-left: 4px solid #52c41a;
+    margin-right: 2rem;
+    margin-left: 0.5rem;
+  }
+
+  .system-message {
+    text-align: center;
+    padding: 0.75rem;
+    margin: 1rem auto;
+    font-style: italic;
+    color: #666;
+    background-color: #fafafa;
+    border-radius: 8px;
+    max-width: 90%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .error-message {
+    text-align: center;
+    padding: 0.75rem;
+    margin: 1rem auto;
+    color: #f5222d;
+    background-color: #fff1f0;
+    border: 1px solid #ffa39e;
+    border-radius: 8px;
+    max-width: 90%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .role-label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  .user-content,
+  .assistant-response,
+  .assistant-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.6;
   }
 
   form {
-    margin-top: 1rem;
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
   }
 
-  input,
-  button,
+  input {
+    flex: 1;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+
+  button {
+    font-size: 1rem;
+    padding: 0.75rem 1.25rem;
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button:hover:not(:disabled) {
+    background-color: #096dd9;
+  }
+
+  button:disabled {
+    background-color: #d9d9d9;
+    cursor: not-allowed;
+  }
+
   select {
     font-size: 1rem;
-    padding: 0.5rem;
-    width: 100%;
-    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    background-color: white;
   }
 
   .error {
-    color: red;
+    color: #f5222d;
     font-weight: bold;
   }
 
@@ -47,17 +161,22 @@ export const styles = `
     margin-top: 1rem;
     font-family: monospace;
     font-size: 0.8rem;
-    background: #eee;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
+    background: #f5f5f5;
+    padding: 0.75rem;
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
     max-height: 150px;
     overflow-y: auto;
   }
 
   .controls {
     display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .controls select {
+    flex: 3;
   }
 
   .controls button {
@@ -66,16 +185,16 @@ export const styles = `
 
   .progress-bar {
     width: 100%;
-    height: 20px;
-    background-color: #e0e0e0;
-    border-radius: 4px;
-    margin-top: 10px;
+    height: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    margin-top: 12px;
     overflow: hidden;
   }
 
   .progress-fill {
     height: 100%;
-    background-color: #4caf50;
+    background-color: #52c41a;
     width: 0%;
     transition: width 0.3s ease;
   }
@@ -84,48 +203,43 @@ export const styles = `
     text-align: center;
     margin-top: 5px;
     font-size: 0.9rem;
-  }
-
-  .model-size {
-    display: inline-block;
-    font-size: 0.8rem;
     color: #666;
-    margin-left: 5px;
   }
 
   .resource-warning {
-    margin-top: 10px;
-    font-size: 0.8rem;
-    color: #f57c00;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #fa8c16;
+    padding: 0.5rem;
+    background-color: #fff7e6;
+    border: 1px solid #ffd591;
+    border-radius: 4px;
     display: none;
   }
 
-  .model-group {
-    border-top: 1px solid #ddd;
-    margin-top: 5px;
-    padding-top: 3px;
-    font-weight: bold;
-    color: #666;
-  }
-
   .model-info {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #ddd;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #e8e8e8;
     border-radius: 4px;
-    background-color: #f8f8f8;
+    background-color: #fafafa;
     display: none;
   }
 
   .model-details {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 5px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   .model-detail {
     display: flex;
     align-items: center;
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .model-detail-icon {
@@ -142,6 +256,34 @@ export const styles = `
   .model-detail-value {
     font-weight: bold;
     font-size: 0.9rem;
+  }
+
+  @media (max-width: 600px) {
+    body {
+      padding: 0.75rem;
+      margin: 0;
+    }
+
+    .controls {
+      flex-direction: column;
+    }
+
+    .controls select,
+    .controls button {
+      width: 100%;
+    }
+
+    form {
+      flex-direction: column;
+    }
+
+    #output {
+      max-height: 400px;
+    }
+
+    .model-details {
+      flex-direction: column;
+    }
   }
 `
 
