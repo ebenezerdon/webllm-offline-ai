@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Browser LLM Chat</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 1rem;
+      }
+      #output {
+        background: #f4f4f4;
+        padding: 1rem;
+        min-height: 200px;
+        border: 1px solid #ccc;
+        white-space: pre-wrap;
+        overflow-y: auto;
+        max-height: 400px;
+      }
+      form {
+        margin-top: 1rem;
+      }
+      input,
+      button,
+      select {
+        font-size: 1rem;
+        padding: 0.5rem;
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      .error {
+        color: red;
+        font-weight: bold;
+      }
+      .status {
+        margin-top: 1rem;
+        font-style: italic;
+        color: #666;
+      }
+      .debug {
+        margin-top: 1rem;
+        font-family: monospace;
+        font-size: 0.8rem;
+        background: #eee;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .controls button {
+        flex: 1;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background-color: #4caf50;
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+      .progress-text {
+        text-align: center;
+        margin-top: 5px;
+        font-size: 0.9rem;
+      }
+      .model-size {
+        display: inline-block;
+        font-size: 0.8rem;
+        color: #666;
+        margin-left: 5px;
+      }
+      .resource-warning {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: #f57c00;
+        display: none;
+      }
+      .model-group {
+        border-top: 1px solid #ddd;
+        margin-top: 5px;
+        padding-top: 3px;
+        font-weight: bold;
+        color: #666;
+      }
+      .model-info {
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f8f8f8;
+        display: none;
+      }
+      .model-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+      }
+      .model-detail {
+        display: flex;
+        align-items: center;
+      }
+      .model-detail-icon {
+        margin-right: 5px;
+        font-size: 1.2rem;
+      }
+      .model-detail-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin-right: 5px;
+      }
+      .model-detail-value {
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat with LLM (In your browser)</h1>
+    <div class="controls">
+      <select id="model-select">
+        <optgroup label="Small Models (Recommended for most devices)">
+          <option
+            value="Qwen2-0.5B-Instruct-q4f32_1-MLC"
+            data-size="1.1 GB"
+            data-vram="1.1 GB"
+            data-params="0.5B"
+          >
+            Qwen2 0.5B (Very Small)
+          </option>
+          <option
+            value="SmolLM2-360M-Instruct-q4f32_1-MLC"
+            data-size="0.6 GB"
+            data-vram="0.6 GB"
+            data-params="360M"
+          >
+            SmolLM2 360M (Very Small)
+          </option>
+          <option
+            value="Qwen2-1.5B-Instruct-q4f32_1-MLC"
+            data-size="1.9 GB"
+            data-vram="1.9 GB"
+            data-params="1.5B"
+          >
+            Qwen2 1.5B (Small)
+          </option>
+          <option
+            value="TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC"
+            data-size="0.8 GB"
+            data-vram="0.8 GB"
+            data-params="1.1B"
+          >
+            TinyLlama 1.1B (Small)
+          </option>
+          <option
+            value="phi-1_5-q4f32_1-MLC"
+            data-size="1.7 GB"
+            data-vram="1.7 GB"
+            data-params="1.3B"
+          >
+            Phi 1.5 (Small)
+          </option>
+        </optgroup>
+        <optgroup label="Medium Models (Faster GPUs recommended)">
+          <option
+            value="Qwen2.5-7B-Instruct-q4f32_1-MLC"
+            data-size="5.9 GB"
+            data-vram="5.9 GB"
+            data-params="7B"
+          >
+            Qwen 2.5 7B (Medium)
+          </option>
+          <option
+            value="DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC"
+            data-size="6.1 GB"
+            data-vram="6.1 GB"
+            data-params="8B"
+          >
+            DeepSeek R1 Llama 8B (Medium)
+          </option>
+          <option
+            value="Llama-3.1-8B-Instruct-q4f32_1-MLC"
+            data-size="6.1 GB"
+            data-vram="6.1 GB"
+            data-params="8B"
+          >
+            Llama 3.1 8B (Medium)
+          </option>
+          <option
+            value="Hermes-3-Llama-3.1-8B-q4f32_1-MLC"
+            data-size="5.8 GB"
+            data-vram="5.8 GB"
+            data-params="8B"
+          >
+            Hermes 3 Llama 8B (Medium)
+          </option>
+        </optgroup>
+        <optgroup label="Large Models (Powerful but requires high-end GPU)">
+          <option
+            value="Qwen2.5-32B-Instruct-q4f32_1-MLC"
+            data-size="32 GB"
+            data-vram="28 GB"
+            data-params="32B"
+          >
+            Qwen 2.5 32B (Large)
+          </option>
+          <option
+            value="Phi-3.5-mini-instruct-q4f32_1-MLC"
+            data-size="5.5 GB"
+            data-vram="5.5 GB"
+            data-params="8B"
+          >
+            Phi 3.5 Mini (Large)
+          </option>
+          <option
+            value="gemma-2-9b-it-q4f32_1-MLC"
+            data-size="8.4 GB"
+            data-vram="8.4 GB"
+            data-params="9B"
+          >
+            Gemma 2 9B (Large)
+          </option>
+        </optgroup>
+      </select>
+      <button id="load-model">Load Model</button>
+    </div>
+    <div id="model-info" class="model-info">
+      <div class="model-details">
+        <div class="model-detail">
+          <span class="model-detail-icon">📦</span>
+          <span class="model-detail-label">Download Size:</span>
+          <span id="model-download-size" class="model-detail-value">--</span>
+        </div>
+        <div class="model-detail">
+          <span class="model-detail-icon">🧠</span>
+          <span class="model-detail-label">VRAM Required:</span>
+          <span id="model-vram" class="model-detail-value">--</span>
+        </div>
+        <div class="model-detail">
+          <span class="model-detail-icon">🔢</span>
+          <span class="model-detail-label">Parameters:</span>
+          <span id="model-params" class="model-detail-value">--</span>
+        </div>
+      </div>
+    </div>
+    <div id="resource-warning" class="resource-warning">
+      <strong>Note:</strong> Large models require significant GPU resources. If
+      your device has limited capabilities, consider using smaller models.
+    </div>
+    <div id="output">Select a model and click "Load Model" to begin</div>
+    <div id="progress-container" style="display: none">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <div id="progress-text" class="progress-text">0%</div>
+    </div>
+    <div id="status" class="status"></div>
+    <div id="debug" class="debug"></div>
+    <form id="chat-form">
+      <input id="prompt" placeholder="Type your question..." disabled />
+      <button type="submit" disabled>Send</button>
+    </form>
+  </body>
+
+  <script type="module">
+    import {
+      CreateMLCEngine,
+      prebuiltAppConfig,
+    } from 'https://esm.run/@mlc-ai/web-llm@0.2.79'
+
+    const output = document.getElementById('output')
+    const status = document.getElementById('status')
+    const debug = document.getElementById('debug')
+    const form = document.getElementById('chat-form')
+    const promptInput = document.getElementById('prompt')
+    const submitButton = document.querySelector('button[type="submit"]')
+    const modelSelect = document.getElementById('model-select')
+    const loadModelButton = document.getElementById('load-model')
+    const progressContainer = document.getElementById('progress-container')
+    const progressFill = document.getElementById('progress-fill')
+    const progressText = document.getElementById('progress-text')
+    const resourceWarning = document.getElementById('resource-warning')
+    const modelInfo = document.getElementById('model-info')
+    const modelDownloadSize = document.getElementById('model-download-size')
+    const modelVram = document.getElementById('model-vram')
+    const modelParams = document.getElementById('model-params')
+
+    let engine = null
+
+    // Model size categories
+    const MODEL_SIZES = {
+      'Qwen2-0.5B-Instruct-q4f32_1-MLC': 'small',
+      'SmolLM2-360M-Instruct-q4f32_1-MLC': 'small',
+      'Qwen2-1.5B-Instruct-q4f32_1-MLC': 'small',
+      'TinyLlama-1.1B-Chat-v1.0-q4f32_1-MLC': 'small',
+      'phi-1_5-q4f32_1-MLC': 'small',
+      'Qwen2.5-7B-Instruct-q4f32_1-MLC': 'medium',
+      'DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC': 'medium',
+      'Llama-3.1-8B-Instruct-q4f32_1-MLC': 'medium',
+      'Hermes-3-Llama-3.1-8B-q4f32_1-MLC': 'medium',
+      'Qwen2.5-32B-Instruct-q4f32_1-MLC': 'large',
+      'Phi-3.5-mini-instruct-q4f32_1-MLC': 'large',
+      'gemma-2-9b-it-q4f32_1-MLC': 'large',
+    }
+
+    // Add debug logs that show in the UI
+    const logDebug = (message) => {
+      const timestamp = new Date().toISOString().split('T')[1].split('.')[0]
+      debug.innerHTML += `[${timestamp}] ${message}<br>`
+      debug.scrollTop = debug.scrollHeight
+      console.log(message)
+    }
+
+    const logStatus = (message) => {
+      status.textContent = message
+      logDebug(`Status: ${message}`)
+    }
+
+    const logError = (message) => {
+      output.innerHTML += `<div class="error">${message}</div>`
+      logDebug(`ERROR: ${message}`)
+      console.error(message)
+    }
+
+    // Update progress bar
+    const updateProgress = (percent) => {
+      progressContainer.style.display = 'block'
+      progressFill.style.width = `${percent}%`
+      progressText.textContent = `${percent}%`
+    }
+
+    // Update model info display
+    const updateModelInfo = (selectedOption) => {
+      if (selectedOption) {
+        const downloadSize = selectedOption.dataset.size || '--'
+        const vramRequired = selectedOption.dataset.vram || '--'
+        const params = selectedOption.dataset.params || '--'
+
+        modelDownloadSize.textContent = downloadSize
+        modelVram.textContent = vramRequired
+        modelParams.textContent = params
+        modelInfo.style.display = 'block'
+      } else {
+        modelInfo.style.display = 'none'
+      }
+    }
+
+    // Show warning for large models and update model info
+    modelSelect.addEventListener('change', () => {
+      const selectedModel = modelSelect.value
+      const modelSize = MODEL_SIZES[selectedModel] || 'medium'
+      const selectedOption = modelSelect.options[modelSelect.selectedIndex]
+
+      updateModelInfo(selectedOption)
+
+      if (modelSize === 'large') {
+        resourceWarning.style.display = 'block'
+      } else {
+        resourceWarning.style.display = 'none'
+      }
+    })
+
+    // Initialize with the currently selected model's info
+    updateModelInfo(modelSelect.options[modelSelect.selectedIndex])
+
+    // Log available models for debugging
+    const availableModels = prebuiltAppConfig.model_list.map((m) => m.model_id)
+    logDebug(`Available models: ${availableModels.slice(0, 10).join(', ')}...`)
+    logDebug(`Total available models: ${availableModels.length}`)
+
+    // Check if our dropdown models are in the available list
+    const dropdownModels = Array.from(modelSelect.options).map(
+      (opt) => opt.value,
+    )
+    dropdownModels.forEach((model) => {
+      const isAvailable = availableModels.includes(model)
+      logDebug(
+        `Model ${model} is ${
+          isAvailable ? 'available' : 'NOT available'
+        } in prebuiltAppConfig`,
+      )
+    })
+
+    const checkWebGPUSupport = () => {
+      if (!navigator.gpu) {
+        throw new Error(
+          'WebGPU not supported in this browser. Please use Chrome 113+, Edge 113+, or Firefox 118+ with WebGPU enabled.',
+        )
+      }
+
+      logDebug('WebGPU is supported in this browser')
+      return true
+    }
+
+    const loadModel = async (modelId) => {
+      try {
+        // Reset UI state
+        output.textContent = 'Initializing...'
+        promptInput.disabled = true
+        submitButton.disabled = true
+        loadModelButton.disabled = true
+        progressContainer.style.display = 'none'
+
+        logStatus('Checking browser compatibility...')
+        checkWebGPUSupport()
+
+        const selectedOption = Array.from(modelSelect.options).find(
+          (opt) => opt.value === modelId,
+        )
+        const downloadSize = selectedOption ? selectedOption.dataset.size : '?'
+
+        logDebug(`Starting to load model: ${modelId} (size: ${downloadSize})`)
+        logStatus(
+          `Starting model download (${downloadSize}). This may take a while for the first time...`,
+        )
+        output.textContent = `Starting model download (${downloadSize}). This may take a while for the first time...`
+
+        let progressReceived = false
+        let downloadStartTime = Date.now()
+
+        engine = await CreateMLCEngine(modelId, {
+          initProgressCallback: (progress) => {
+            progressReceived = true
+
+            // Log the raw progress for debugging
+            logDebug(`Raw progress value: ${JSON.stringify(progress)}`)
+
+            let percent = 0
+
+            // Check if progress is an object with progress property
+            if (
+              progress &&
+              typeof progress === 'object' &&
+              'progress' in progress
+            ) {
+              percent = Math.floor(progress.progress * 100)
+              logDebug(`Progress from object: ${percent}%`)
+            }
+            // Check if progress is a number directly
+            else if (typeof progress === 'number' && !isNaN(progress)) {
+              percent = Math.floor(progress * 100)
+              logDebug(`Progress from number: ${percent}%`)
+            }
+            // Fall back to task info if available
+            else if (
+              progress &&
+              typeof progress === 'object' &&
+              progress.text
+            ) {
+              logStatus(`Status: ${progress.text}`)
+              if (progress.phase === 'download') {
+                // Try to extract a percentage from the text if it exists
+                const percentMatch = progress.text.match(/(\d+)%/)
+                if (percentMatch) {
+                  percent = parseInt(percentMatch[1])
+                  logDebug(`Progress from text: ${percent}%`)
+                }
+              }
+            } else {
+              logStatus('Downloading model... (progress unknown)')
+              return
+            }
+
+            // Calculate estimated time remaining
+            const elapsedMs = Date.now() - downloadStartTime
+            let remainingTime = ''
+
+            if (percent > 0) {
+              const totalEstimatedMs = (elapsedMs / percent) * 100
+              const remainingMs = totalEstimatedMs - elapsedMs
+
+              // Only show time estimate if we have at least 5% progress
+              if (percent >= 5 && remainingMs > 0) {
+                if (remainingMs < 60000) {
+                  remainingTime = ` (${Math.ceil(
+                    remainingMs / 1000,
+                  )}s remaining)`
+                } else {
+                  remainingTime = ` (${Math.ceil(
+                    remainingMs / 60000,
+                  )}m remaining)`
+                }
+              }
+            }
+
+            // Update progress bar and status
+            updateProgress(percent)
+            output.textContent = `Loading model... ${percent}%${remainingTime}`
+            logStatus(`Download progress: ${percent}%${remainingTime}`)
+          },
+          useIndexedDBCache: true,
+        })
+
+        const loadTime = ((Date.now() - downloadStartTime) / 1000).toFixed(1)
+
+        if (!progressReceived) {
+          logDebug('No progress callbacks were received during loading')
+        }
+
+        output.textContent = `Model ready in ${loadTime}s. Ask me something!`
+        logStatus(`Model ${modelId} loaded successfully in ${loadTime}s`)
+
+        // Enable the form inputs
+        promptInput.disabled = false
+        submitButton.disabled = false
+        loadModelButton.disabled = false
+
+        return engine
+      } catch (error) {
+        loadModelButton.disabled = false
+        logError(`Failed to load model: ${error.message}`)
+        logDebug(
+          `Detailed error: ${JSON.stringify(
+            error,
+            Object.getOwnPropertyNames(error),
+          )}`,
+        )
+        logStatus('Check debug log for more details')
+        throw error
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      if (!engine) {
+        logError('No model loaded. Please load a model first.')
+        return
+      }
+
+      const prompt = promptInput.value.trim()
+      if (!prompt) return
+
+      output.textContent = `You: ${prompt}\n\nAssistant: `
+      promptInput.value = ''
+      promptInput.disabled = true
+      submitButton.disabled = true
+
+      try {
+        const stream = await engine.chat.completions.create({
+          messages: [{ role: 'user', content: prompt }],
+          stream: true,
+        })
+
+        for await (const chunk of stream) {
+          const token = chunk.choices[0].delta.content || ''
+          output.textContent += token
+          output.scrollTop = output.scrollHeight
+        }
+
+        // Re-enable input after generation is complete
+        promptInput.disabled = false
+        submitButton.disabled = false
+        promptInput.focus()
+      } catch (error) {
+        logError(`Error during chat: ${error.message}`)
+        logDebug(
+          `Chat error details: ${JSON.stringify(
+            error,
+            Object.getOwnPropertyNames(error),
+          )}`,
+        )
+
+        // Re-enable input after error
+        promptInput.disabled = false
+        submitButton.disabled = false
+      }
+    })
+
+    loadModelButton.addEventListener('click', async () => {
+      const selectedModel = modelSelect.value
+      logDebug(`User selected model: ${selectedModel}`)
+      try {
+        await loadModel(selectedModel)
+      } catch (error) {
+        logDebug('Error caught in button click handler: ' + error.message)
+      }
+    })
+
+    // Log browser info for debugging
+    logDebug(`Browser: ${navigator.userAgent}`)
+    if (navigator.gpu) {
+      logDebug('WebGPU is available')
+      navigator.gpu
+        .requestAdapter()
+        .then((adapter) => {
+          if (adapter) {
+            logDebug(`GPU adapter found: ${adapter.name || 'unknown'}`)
+          } else {
+            logDebug('No WebGPU adapter found')
+          }
+        })
+        .catch((err) => {
+          logDebug(`Error getting GPU adapter: ${err.message}`)
+        })
+    } else {
+      logDebug('WebGPU is NOT available in this browser')
+    }
+  </script>
+</html>
