@@ -190,13 +190,25 @@ export const styles = `
     border-radius: 5px;
     margin-top: 12px;
     overflow: hidden;
+    position: relative;
   }
 
   .progress-fill {
     height: 100%;
     background-color: #52c41a;
     width: 0%;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, margin-left 0.3s ease;
+    position: relative;
+  }
+
+  .progress-fill.indeterminate {
+    width: 30%;
+    animation: indeterminate-progress 1.5s infinite ease-in-out;
+  }
+
+  @keyframes indeterminate-progress {
+    0% { margin-left: -30%; }
+    100% { margin-left: 100%; }
   }
 
   .progress-text {
