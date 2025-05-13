@@ -32,6 +32,62 @@ Key points about your capabilities:
   }
 
   /**
+   * Create and show the typing indicator
+   * @private
+   */
+  showTypingIndicator() {
+    const outputEl = this.elements.output
+
+    // Create assistant message container if not already present
+    let assistantMessageEl = outputEl.querySelector(
+      '.assistant-message:last-child',
+    )
+    if (!assistantMessageEl) {
+      assistantMessageEl = document.createElement('div')
+      assistantMessageEl.className = 'assistant-message'
+
+      const roleLabel = document.createElement('div')
+      roleLabel.className = 'role-label'
+      roleLabel.textContent = 'Assistant:'
+      assistantMessageEl.appendChild(roleLabel)
+
+      outputEl.appendChild(assistantMessageEl)
+    }
+
+    // Check if typing indicator already exists
+    if (assistantMessageEl.querySelector('.typing-indicator')) {
+      return
+    }
+
+    // Create typing indicator
+    const indicatorEl = document.createElement('div')
+    indicatorEl.className = 'typing-indicator'
+
+    // Create three dots
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement('div')
+      dot.className = 'typing-dot'
+      indicatorEl.appendChild(dot)
+    }
+
+    // Add to assistant message
+    assistantMessageEl.appendChild(indicatorEl)
+    outputEl.scrollTop = outputEl.scrollHeight
+  }
+
+  /**
+   * Remove the typing indicator
+   * @private
+   */
+  hideTypingIndicator() {
+    const outputEl = this.elements.output
+    const indicator = outputEl.querySelector('.typing-indicator')
+    if (indicator) {
+      indicator.remove()
+    }
+  }
+
+  /**
    * Generate chat completion from the model
    * @param {string} prompt - User prompt
    * @returns {Promise<void>}
@@ -53,6 +109,9 @@ Key points about your capabilities:
       this.conversation.push({ role: 'user', content: prompt })
       this.displayConversation()
 
+      // Show typing indicator before starting generation
+      this.showTypingIndicator()
+
       // Create chat completion using messages including system prompt
       const stream = await this.engine.chat.completions.create({
         messages,
@@ -60,22 +119,34 @@ Key points about your capabilities:
       })
 
       let assistantResponse = ''
+      let firstChunk = true
 
       for await (const chunk of stream) {
         const token = chunk.choices[0].delta.content || ''
         assistantResponse += token
 
+        // On first token, hide the typing indicator and create the response element
+        if (firstChunk) {
+          this.hideTypingIndicator()
+          firstChunk = false
+        }
+
         // Update just the assistant's current response
         const outputEl = this.elements.output
-        const lastChild = outputEl.lastChild
+        const assistantMessageEl = outputEl.querySelector(
+          '.assistant-message:last-child',
+        )
 
-        if (lastChild && lastChild.className === 'assistant-response') {
-          lastChild.textContent = assistantResponse
-        } else {
-          const responseEl = document.createElement('div')
-          responseEl.className = 'assistant-response'
+        if (assistantMessageEl) {
+          // Find existing response element or create one
+          let responseEl =
+            assistantMessageEl.querySelector('.assistant-content')
+          if (!responseEl) {
+            responseEl = document.createElement('div')
+            responseEl.className = 'assistant-content'
+            assistantMessageEl.appendChild(responseEl)
+          }
           responseEl.textContent = assistantResponse
-          outputEl.appendChild(responseEl)
         }
 
         this.elements.output.scrollTop = this.elements.output.scrollHeight
@@ -86,6 +157,9 @@ Key points about your capabilities:
 
       return true
     } catch (error) {
+      // Hide typing indicator if there's an error
+      this.hideTypingIndicator()
+
       logError(`Error during chat: ${error.message}`)
       logDebug(
         `Chat error details: ${JSON.stringify(
