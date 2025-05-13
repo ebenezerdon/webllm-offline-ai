@@ -11,7 +11,11 @@ import {
 } from './utils/logger.js'
 import { populateModelSelect, updateModelInfo } from './utils/ui.js'
 import LLMModel from './models/llm-model.js'
-import { getLastUsedModel, saveLastUsedModel } from './utils/db.js'
+import {
+  getLastUsedModel,
+  saveLastUsedModel,
+  clearConversations,
+} from './utils/db.js'
 
 class App {
   constructor() {
@@ -59,12 +63,52 @@ class App {
         }
 
         // Load the model automatically
-        this.handleLoadModelClick()
+        await this.handleLoadModelClick()
+
+        // Load the last conversation after model is loaded
+        await this.loadLastConversation()
       } else {
         logDebug('No previous model found in database')
       }
     } catch (error) {
       logDebug(`Error loading last model: ${error.message}`)
+    }
+  }
+
+  /**
+   * Load the last conversation from the database
+   */
+  async loadLastConversation() {
+    if (!this.model.isReady()) {
+      logDebug('Cannot load conversation: model not ready')
+      return
+    }
+
+    try {
+      const loaded = await this.model.loadLastConversation()
+      if (loaded) {
+        logStatus('Restored your previous conversation')
+      }
+    } catch (error) {
+      logDebug(`Error loading conversation: ${error.message}`)
+    }
+  }
+
+  /**
+   * Handle clear chat button click
+   */
+  async handleClearChatClick() {
+    try {
+      // Clear conversation in the model
+      this.model.conversation = []
+      this.model.displayConversation('Conversation cleared')
+
+      // Clear from database
+      await clearConversations()
+      logStatus('Conversation history cleared')
+      logDebug('All conversations removed from database')
+    } catch (error) {
+      logDebug(`Error clearing conversations: ${error.message}`)
     }
   }
 
@@ -133,6 +177,14 @@ class App {
       'click',
       this.handleLoadModelClick.bind(this),
     )
+
+    // Clear chat button
+    if (this.elements.clearChatButton) {
+      this.elements.clearChatButton.addEventListener(
+        'click',
+        this.handleClearChatClick.bind(this),
+      )
+    }
   }
 
   /**
