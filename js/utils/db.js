@@ -31,6 +31,20 @@ export const saveConversation = async (conversation) => {
 }
 
 /**
+ * Clear all conversations from the database
+ * @returns {Promise<boolean>} - Success status
+ */
+export const clearConversations = async () => {
+  try {
+    await db.conversations.clear()
+    return true
+  } catch (error) {
+    console.error('Failed to clear conversations:', error)
+    return false
+  }
+}
+
+/**
  * Get all stored conversations
  * @returns {Promise<Array>} - Array of conversation objects
  */
@@ -40,6 +54,28 @@ export const getConversations = async () => {
   } catch (error) {
     console.error('Failed to get conversations:', error)
     return []
+  }
+}
+
+/**
+ * Get the most recent conversation
+ * @returns {Promise<Array|null>} - Array of message objects or null if none found
+ */
+export const getLastConversation = async () => {
+  try {
+    const conversations = await db.conversations
+      .orderBy('timestamp')
+      .reverse()
+      .limit(1)
+      .toArray()
+
+    if (conversations.length > 0) {
+      return conversations[0].messages
+    }
+    return null
+  } catch (error) {
+    console.error('Failed to get last conversation:', error)
+    return null
   }
 }
 

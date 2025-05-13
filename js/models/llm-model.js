@@ -8,7 +8,7 @@ import {
   updateProgress,
   checkWebGPUSupport,
 } from '../utils/ui.js'
-import { saveConversation } from '../utils/db.js'
+import { saveConversation, getLastConversation } from '../utils/db.js'
 
 export default class LLMModel {
   constructor() {
@@ -30,6 +30,30 @@ Key points about your capabilities:
    */
   setElements(elements) {
     this.elements = elements
+  }
+
+  /**
+   * Load the last conversation from the database
+   * @returns {Promise<boolean>} Whether a conversation was loaded
+   */
+  async loadLastConversation() {
+    try {
+      const conversationHistory = await getLastConversation()
+
+      if (conversationHistory && conversationHistory.length > 0) {
+        this.conversation = conversationHistory
+        this.displayConversation()
+        logDebug(
+          `Loaded conversation with ${conversationHistory.length} messages`,
+        )
+        return true
+      }
+
+      return false
+    } catch (error) {
+      logDebug(`Error loading conversation: ${error.message}`)
+      return false
+    }
   }
 
   /**
