@@ -513,12 +513,22 @@ body {
   flex-direction: column;
   overflow: hidden;
   position: absolute;
-  transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1),
-    opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1),
-    width 0.25s cubic-bezier(0.1, 0.9, 0.2, 1),
-    height 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
   opacity: 1;
   transform: scale(1);
+  will-change: transform, opacity, width, height;
+}
+
+@media (max-width: 768px) {
+  .app-window {
+    width: calc(100% - 30px);
+    height: calc(100% - 30px);
+    top: 15px;
+    left: 15px;
+    max-width: none;
+    max-height: none;
+    border-radius: var(--win11-radius-sm);
+  }
 }
 
 .app-window.minimized {

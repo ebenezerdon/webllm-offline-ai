@@ -103,7 +103,7 @@ const initpcUI = () => {
   debugElement = document.getElementById('debug')
   startButton = document.querySelector('.taskbar-start-button')
   startMenu = document.getElementById('startMenu')
-  pcDesktopElement = document.querySelector('.pc-desktop') // Initialize cached element
+  pcDesktopElement = document.querySelector('.pc-desktop')
 
   if (debugElement) {
     originalDebugParent = debugElement.parentNode
@@ -117,7 +117,7 @@ const initpcUI = () => {
     !closeButton ||
     !taskbarAppIcon ||
     !taskbarClock ||
-    !pcDesktopElement || // Check for pcDesktopElement
+    !pcDesktopElement ||
     !taskbarLogButton ||
     !startButton ||
     !startMenu
@@ -126,43 +126,47 @@ const initpcUI = () => {
     return
   }
 
-  setDynamicViewportHeight() // Call on init
+  // Set initial state before any animations
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    isMaximized = true
+    appWindow.classList.add('maximized')
+    appWindow.style.transform = 'none'
+    const iconSpan = maximizeButton.querySelector('.icon')
+    iconSpan.classList.remove('icon-maximize')
+    iconSpan.classList.add('icon-restore')
+    maximizeButton.title = 'Restore'
+  } else {
+    centerWindow()
+  }
+
+  // Now set up all event listeners and other functionality
+  setDynamicViewportHeight()
   window.addEventListener('resize', setDynamicViewportHeight)
   window.addEventListener('orientationchange', () => {
-    // On orientation change, delay the viewport adjustment slightly to ensure accurate measurements
     setTimeout(setDynamicViewportHeight, 100)
   })
 
-  // Add a specific handler for when virtual keyboards appear on mobile
   if ('visualViewport' in window) {
     window.visualViewport.addEventListener('resize', () => {
-      // If this is likely a virtual keyboard (height change but not width)
       if (
         window.innerWidth === window.visualViewport.width &&
         window.innerHeight > window.visualViewport.height
       ) {
         const keyboardHeight = window.innerHeight - window.visualViewport.height
-
-        // Adjust the form position to be visible above the keyboard
         const formEl = document.getElementById('chat-form')
         if (formEl && keyboardHeight > 50) {
-          // Only adjust if keyboard is likely present
           formEl.style.position = 'fixed'
           formEl.style.bottom = `${keyboardHeight}px`
-
-          // Also adjust the output area to make room
           const outputEl = document.getElementById('output')
           if (outputEl) {
             outputEl.style.marginBottom = `${keyboardHeight + 20}px`
           }
         }
       } else {
-        // Reset when keyboard is hidden
         const formEl = document.getElementById('chat-form')
         if (formEl) {
           formEl.style.position = 'sticky'
           formEl.style.bottom = '0'
-
           const outputEl = document.getElementById('output')
           if (outputEl) {
             outputEl.style.marginBottom = '8px'
@@ -179,29 +183,15 @@ const initpcUI = () => {
   setupStartMenu()
   updateClock()
 
-  // Update clock every minute
   setInterval(updateClock, 60000)
-
-  // Automatically maximize window on mobile devices
-  if (window.matchMedia('(max-width: 768px)').matches) {
-    // Use a slight delay to ensure all elements are properly initialized
-    setTimeout(() => {
-      if (!isMaximized) {
-        toggleMaximize()
-      }
-    }, 100)
-  } else {
-    // Center window initially if not maximized and not on mobile
-    if (!isMaximized) {
-      centerWindow()
-    }
-  }
 
   // Add snap behavior when window is dragged to top edge
   setupSnapBehavior()
 
-  // Add window animations
-  applyWindowAnimations()
+  // Add window animations after initial state is set
+  setTimeout(() => {
+    applyWindowAnimations()
+  }, 50)
 }
 
 const centerWindow = () => {
