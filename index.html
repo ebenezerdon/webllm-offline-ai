@@ -2,89 +2,144 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Browser LLM Chat</title>
+    <title>WebLLM Chat - pc Edition</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Chat with large language models directly in your browser using WebGPU."
+      content="Chat with LLMs in a pc-themed interface, running locally in your browser."
     />
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/pc-theme.css" />
+    <link rel="stylesheet" href="css/icons.css" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <h1>Chat with LLM (In your browser)</h1>
+    <div class="pc-desktop">
+      <!-- App Window for the Chat Application -->
+      <div class="app-window" id="webLlmAppWindow">
+        <div class="app-window-titlebar" id="appWindowTitlebar">
+          <div class="app-window-titlebar-title">
+            <span class="icon icon-app-chat"></span>
+            <span>WebLLM Chat</span>
+          </div>
+          <div class="app-window-controls">
+            <button class="minimize-button" title="Minimize">
+              <span class="icon icon-minimize"></span>
+            </button>
+            <button class="maximize-button" title="Maximize">
+              <span class="icon icon-maximize"></span>
+            </button>
+            <button class="close-button" title="Close">
+              <span class="icon icon-close"></span>
+            </button>
+          </div>
+        </div>
+        <div class="app-window-content">
+          <!-- Main column - chat interface -->
+          <div class="main-column">
+            <h1><span class="icon icon-app-chat"></span>Chat with Local LLM</h1>
+            <select id="model-select"></select>
 
-    <!-- Begin two-column layout -->
-    <div class="layout-container">
-      <!-- Main column - chat interface -->
-      <div class="main-column">
-        <!-- Model select now standalone at top of main column -->
-        <select id="model-select" class="full-width-select"></select>
+            <div id="model-info" class="model-info" style="display: none">
+              <div class="model-details">
+                <div class="model-detail">
+                  <span class="icon icon-download"></span>
+                  <span class="model-detail-label">Download Size:</span>
+                  <span id="model-download-size" class="model-detail-value"
+                    >--</span
+                  >
+                </div>
+                <div class="model-detail">
+                  <span class="icon icon-memory"></span>
+                  <span class="model-detail-label">VRAM Required:</span>
+                  <span id="model-vram" class="model-detail-value">--</span>
+                </div>
+                <div class="model-detail">
+                  <span class="icon icon-parameter"></span>
+                  <span class="model-detail-label">Parameters:</span>
+                  <span id="model-params" class="model-detail-value">--</span>
+                </div>
+              </div>
+            </div>
 
-        <div id="model-info" class="model-info">
-          <div class="model-details">
-            <div class="model-detail">
-              <span class="model-detail-icon">📦</span>
-              <span class="model-detail-label">Download Size:</span>
-              <span id="model-download-size" class="model-detail-value"
-                >--</span
+            <div
+              id="resource-warning"
+              class="resource-warning"
+              style="display: none"
+            >
+              <span class="icon icon-warning"></span>
+              <strong>Note:</strong> Large models require significant GPU
+              resources. If your device has limited capabilities, consider using
+              smaller models.
+            </div>
+
+            <div id="top-status-container" class="top-status-container">
+              <div id="top-status" class="top-status"></div>
+              <div id="progress-container" style="display: none">
+                <div class="progress-bar">
+                  <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div id="progress-text" class="progress-text">0%</div>
+              </div>
+            </div>
+
+            <div id="output">Initializing AI assistant...</div>
+            <form id="chat-form">
+              <input
+                id="prompt"
+                placeholder="Type your message here..."
+                disabled
+              />
+              <button id="submit-button" type="submit" disabled>
+                <span class="icon icon-send"></span>Send
+              </button>
+            </form>
+
+            <div class="button-container">
+              <button
+                id="clear-chat"
+                class="secondary-button"
+                title="Clear conversation history"
               >
-            </div>
-            <div class="model-detail">
-              <span class="model-detail-icon">🧠</span>
-              <span class="model-detail-label">VRAM Required:</span>
-              <span id="model-vram" class="model-detail-value">--</span>
-            </div>
-            <div class="model-detail">
-              <span class="model-detail-icon">🔢</span>
-              <span class="model-detail-label">Parameters:</span>
-              <span id="model-params" class="model-detail-value">--</span>
+                <span class="icon icon-clear"></span>Clear Chat
+              </button>
             </div>
           </div>
-        </div>
 
-        <div id="resource-warning" class="resource-warning">
-          <strong>Note:</strong> Large models require significant GPU resources.
-          If your device has limited capabilities, consider using smaller
-          models.
-        </div>
-
-        <!-- Loading status area at the top -->
-        <div id="top-status-container" class="top-status-container">
-          <div id="top-status" class="top-status"></div>
-          <div id="progress-container" style="display: none">
-            <div class="progress-bar">
-              <div id="progress-fill" class="progress-fill"></div>
+          <!-- Sidebar column - status and debug logs -->
+          <div class="sidebar-column">
+            <h3><span class="icon icon-status"></span>Status Panel</h3>
+            <!-- Copy of the progress display from main window -->
+            <div id="status-container" class="top-status-container">
+              <div id="status" class="top-status"></div>
+              <div id="status-progress-container" style="display: none">
+                <div class="progress-bar">
+                  <div id="status-progress-fill" class="progress-fill"></div>
+                </div>
+                <div id="status-progress-text" class="progress-text">0%</div>
+              </div>
             </div>
-            <div id="progress-text" class="progress-text">0%</div>
+            <h3><span class="icon icon-debug"></span>Debug Log</h3>
+            <div id="debug"></div>
           </div>
         </div>
-
-        <div id="output">Loading your AI assistant...</div>
-        <form id="chat-form">
-          <input id="prompt" placeholder="Type your question..." disabled />
-          <button id="submit-button" type="submit" disabled>Send</button>
-        </form>
-
-        <!-- Clear Chat button moved to bottom of chat window -->
-        <div class="button-container">
-          <button
-            id="clear-chat"
-            class="secondary-button"
-            title="Clear conversation history"
-          >
-            Clear Chat
-          </button>
-        </div>
       </div>
-
-      <!-- Sidebar column - status and debug logs -->
-      <div class="sidebar-column">
-        <h3>Status & Debug</h3>
-        <div id="status" class="status"></div>
-        <div id="debug" class="debug"></div>
-      </div>
+      <!-- End App Window -->
     </div>
-    <!-- End two-column layout -->
+
+    <div class="pc-taskbar">
+      <button class="taskbar-start-button">
+        <span class="icon icon-pc"></span> Start
+      </button>
+      <button
+        class="taskbar-app-icon active"
+        id="taskbarWebLlmApp"
+        title="WebLLM Chat"
+      >
+        <span class="icon icon-app-chat"></span>
+      </button>
+      <!-- Other app icons could go here -->
+      <div class="taskbar-clock" id="taskbarClock">12:00 PM</div>
+    </div>
 
     <!-- Dexie.js for IndexedDB operations -->
     <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
