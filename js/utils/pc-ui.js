@@ -18,6 +18,7 @@ let debugElement = null
 let startButton = null
 let startMenu = null
 let pcDesktopElement = null // Cache the element
+let isAnimatingWindow = false // Track window animation in progress
 
 let isDragging = false
 let dragOffsetX, dragOffsetY
@@ -349,15 +350,68 @@ const toggleMaximize = () => {
   }, 250)
 }
 
+const hideWindowContent = () => {
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    const form = document.getElementById('chat-form')
+    const buttons = document.querySelector('.button-container')
+    const mainColumn = document.querySelector('.main-column')
+
+    if (form) form.style.opacity = '0'
+    if (buttons) buttons.style.opacity = '0'
+    if (mainColumn) mainColumn.style.opacity = '0'
+  }
+}
+
+const showWindowContent = () => {
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    const form = document.getElementById('chat-form')
+    const buttons = document.querySelector('.button-container')
+    const mainColumn = document.querySelector('.main-column')
+
+    // Short delay to prevent flashing
+    setTimeout(() => {
+      if (form) form.style.opacity = '1'
+      if (buttons) buttons.style.opacity = '1'
+      if (mainColumn) mainColumn.style.opacity = '1'
+    }, 200)
+  }
+}
+
 const setupWindowControls = () => {
   minimizeButton.addEventListener('click', () => {
+    if (isAnimatingWindow) return
+
+    isAnimatingWindow = true
+
+    const isMobile = window.matchMedia('(max-width: 768px)').matches
+
+    if (isMobile) {
+      hideWindowContent()
+    }
+
     appWindow.classList.add('minimizing')
 
-    setTimeout(() => {
-      appWindow.classList.add('minimized')
-      appWindow.classList.remove('minimizing')
-      taskbarAppIcon.classList.remove('active')
-    }, 200)
+    if (isMobile) {
+      appWindow.style.pointerEvents = 'none'
+
+      setTimeout(() => {
+        appWindow.classList.add('minimized')
+        appWindow.classList.remove('minimizing')
+        taskbarAppIcon.classList.remove('active')
+
+        appWindow.style.visibility = 'hidden'
+        appWindow.style.zIndex = '-1'
+
+        isAnimatingWindow = false
+      }, 300)
+    } else {
+      setTimeout(() => {
+        appWindow.classList.add('minimized')
+        appWindow.classList.remove('minimizing')
+        taskbarAppIcon.classList.remove('active')
+        isAnimatingWindow = false
+      }, 200)
+    }
   })
 
   maximizeButton.addEventListener('click', toggleMaximize)
@@ -396,6 +450,11 @@ const setupTaskbar = () => {
   taskbarAppIcon.addEventListener('click', () => {
     const isMinimized = appWindow.classList.contains('minimized')
     const isHidden = appWindow.style.opacity === '0'
+    const isMobile = window.matchMedia('(max-width: 768px)').matches
+
+    if (isAnimatingWindow) return
+
+    isAnimatingWindow = true
 
     if (isMinimized || isHidden) {
       // Show animation
@@ -405,6 +464,12 @@ const setupTaskbar = () => {
       appWindow.style.opacity = '1'
       appWindow.style.pointerEvents = 'auto'
 
+      if (isMobile) {
+        appWindow.style.visibility = 'visible'
+        appWindow.style.zIndex = '10'
+        showWindowContent()
+      }
+
       // Slightly delay removing minimized class for animation
       setTimeout(() => {
         appWindow.classList.remove('minimized')
@@ -412,26 +477,61 @@ const setupTaskbar = () => {
 
         setTimeout(() => {
           appWindow.classList.remove('restoring')
+          appWindow.style.pointerEvents = 'auto'
+          isAnimatingWindow = false
         }, 250)
       }, 50)
     } else {
+      if (isMobile) {
+        hideWindowContent()
+      }
+
       // Minimize with animation
       appWindow.classList.add('minimizing')
 
-      setTimeout(() => {
-        appWindow.classList.add('minimized')
-        appWindow.classList.remove('minimizing')
-        taskbarAppIcon.classList.remove('active')
-      }, 200)
+      if (isMobile) {
+        appWindow.style.pointerEvents = 'none'
+
+        setTimeout(() => {
+          appWindow.classList.add('minimized')
+          appWindow.classList.remove('minimizing')
+          taskbarAppIcon.classList.remove('active')
+
+          appWindow.style.visibility = 'hidden'
+          appWindow.style.zIndex = '-1'
+
+          isAnimatingWindow = false
+        }, 300)
+      } else {
+        setTimeout(() => {
+          appWindow.classList.add('minimized')
+          appWindow.classList.remove('minimizing')
+          taskbarAppIcon.classList.remove('active')
+          isAnimatingWindow = false
+        }, 200)
+      }
     }
   })
 
+  taskbarAppIcon.addEventListener(
+    'touchstart',
+    (e) => {
+      if (isAnimatingWindow) {
+        e.preventDefault()
+        return
+      }
+    },
+    { passive: false },
+  )
+
   // Add bounce effect to taskbar icon when clicked
   taskbarAppIcon.addEventListener('mousedown', () => {
-    taskbarAppIcon.classList.add('pulse')
-    setTimeout(() => {
-      taskbarAppIcon.classList.remove('pulse')
-    }, 300)
+    if (!isAnimatingWindow) {
+      taskbarAppIcon.classList.add('pulse')
+      setTimeout(() => {
+        taskbarAppIcon.classList.remove('pulse')
+      }, 300)
+    }
   })
 }
 
