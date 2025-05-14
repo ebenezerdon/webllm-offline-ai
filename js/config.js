@@ -106,7 +106,6 @@ export const ELEMENT_IDS = {
   prompt: 'prompt',
   submitButton: 'submit-button',
   modelSelect: 'model-select',
-  loadModelButton: 'load-model',
   clearChatButton: 'clear-chat',
   progressContainer: 'progress-container',
   progressFill: 'progress-fill',

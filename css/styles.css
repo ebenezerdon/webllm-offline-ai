@@ -152,6 +152,19 @@ select {
   background-color: white;
 }
 
+/* Full-width select dropdown that matches chat window width */
+.full-width-select {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+/* Button container for the Clear Chat button */
+.button-container {
+  text-align: left;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
 .error {
   color: #f5222d;
   font-weight: bold;
@@ -305,6 +318,11 @@ button.secondary-button:hover:not(:disabled) {
   width: 100%;
 }
 
+/* Sidebar column with logger */
+.sidebar-column {
+  margin-top: 5rem;
+}
+
 /* Mobile styles */
 @media (max-width: 1024px) {
   body {
@@ -330,7 +348,7 @@ button.secondary-button:hover:not(:disabled) {
 
   .sidebar-column {
     width: 100%;
-    margin-top: 1rem;
+    margin-top: 2rem; /* Maintain some spacing but less than desktop */
   }
 
   #output {
