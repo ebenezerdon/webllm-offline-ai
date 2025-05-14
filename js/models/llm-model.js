@@ -424,12 +424,12 @@ Key points about your capabilities:
       if (this.conversation.length > 0) {
         const systemEl = document.createElement('div')
         systemEl.className = 'system-message'
-        systemEl.textContent = 'Model ready. Ask me something!'
+        systemEl.textContent = 'Model ready. Ask me anything!'
         outputEl.appendChild(systemEl)
         outputEl.scrollTop = outputEl.scrollHeight
       } else {
         // If no chat history, display a welcome message
-        this.displayConversation('Model ready. Ask me something!')
+        this.displayConversation('Model ready. Ask me anything!')
       }
 
       return true
