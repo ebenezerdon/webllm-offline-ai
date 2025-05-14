@@ -278,13 +278,13 @@ body {
   border-color: rgba(10, 102, 194, 0.2);
 }
 
-.social-media-item.twitter {
-  background-color: rgba(235, 248, 255, 0.9);
+.social-media-item.x {
+  background-color: rgba(240, 240, 240, 0.9);
 }
 
-.social-media-item.twitter:hover {
-  background-color: rgba(230, 243, 250, 0.95);
-  border-color: rgba(29, 161, 242, 0.2);
+.social-media-item.x:hover {
+  background-color: rgba(230, 230, 230, 0.95);
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 .social-media-item.youtube {
