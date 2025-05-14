@@ -1,30 +1,33 @@
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.5rem;
   line-height: 1.5;
   color: #333;
+  display: block;
+  min-height: initial;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: #1890ff;
 }
 
 #output {
   background: #f9f9f9;
-  padding: 1.25rem;
-  min-height: 300px;
+  padding: 1rem;
   border: 1px solid #e8e8e8;
   border-radius: 8px;
   white-space: pre-wrap;
   overflow-y: auto;
-  max-height: 500px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  height: 500px;
+  flex-grow: 0;
+  min-height: 0;
 }
 
 /* Chat conversation styles */
@@ -173,6 +176,7 @@ select {
 }
 
 .controls {
+  grid-column: 1 / -1;
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1.25rem;
@@ -257,6 +261,7 @@ button.secondary-button:hover:not(:disabled) {
   border-radius: 4px;
   background-color: #fafafa;
   display: none;
+  box-sizing: border-box;
 }
 
 .model-details {
@@ -291,31 +296,100 @@ button.secondary-button:hover:not(:disabled) {
   font-size: 0.9rem;
 }
 
-@media (max-width: 600px) {
+/* Base layout container */
+.layout-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 1.5rem;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Mobile styles */
+@media (max-width: 1024px) {
   body {
-    padding: 0.75rem;
+    padding: 0.5rem 1.3rem;
     margin: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .layout-container {
+    display: block;
+    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .main-column {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .sidebar-column {
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  #output {
+    height: 50vh;
+    max-height: none;
+    margin-bottom: 1rem;
+  }
+
+  .sidebar-column .debug {
+    height: 30vh;
+    max-height: none;
   }
 
   .controls {
     flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
   }
 
   .controls select,
   .controls button {
     width: 100%;
+    margin: 0;
   }
 
   form {
     flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
   }
 
-  #output {
-    max-height: 400px;
+  input,
+  button {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .model-info {
+    width: 100%;
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    box-sizing: border-box;
   }
 
   .model-details {
     flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .model-detail {
+    width: 100%;
+  }
+
+  .top-status-container {
+    width: 100%;
+    margin: 0.5rem 0;
   }
 }
 
@@ -361,4 +435,24 @@ button.secondary-button:hover:not(:disabled) {
 .top-status-container {
   margin: 0.5rem 0;
   padding: 0.5rem 0;
+}
+
+/* Style the status and debug areas in the sidebar */
+.sidebar-column h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #1890ff;
+}
+
+.sidebar-column .status {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.sidebar-column .debug {
+  height: 500px;
+  overflow-y: auto;
+  min-height: 0;
+  flex-grow: 0;
 }
