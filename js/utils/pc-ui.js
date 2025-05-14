@@ -98,17 +98,23 @@ const centerWindow = () => {
 
 const setupWindowDragging = () => {
   titleBar.addEventListener('mousedown', (e) => {
-    // Check if it's not the buttons area
     if (e.target.closest('.app-window-controls')) return
 
-    if (isMaximized) {
-      // When dragging from maximized state, restore window first
-      // Calculate position so cursor stays at same relative point within titlebar
-      const ratio = e.clientX / window.innerWidth
-      toggleMaximize()
+    appWindow.style.transition = 'none' // Disable transitions during drag prep
 
-      // Update drag offset for smooth transition from maximized to normal
-      dragOffsetX = Math.floor(appWindow.offsetWidth * ratio)
+    if (isMaximized) {
+      toggleMaximize() // Restore to normal size and position first
+
+      // Calculate initial position for the restored window so cursor is within title bar
+      // Estimate original non-maximized width if not available, or use a sensible default
+      const restoredWidth =
+        parseInt(windowPosition.width) || appWindow.offsetWidth
+      const newLeft = e.clientX - restoredWidth / 3 // Place cursor about 1/3 into the title bar
+      appWindow.style.left = `${newLeft}px`
+      appWindow.style.top = '15px' // Start near top of screen
+
+      // Offsets are now relative to this newly restored position
+      dragOffsetX = e.clientX - appWindow.offsetLeft
       dragOffsetY = e.clientY - appWindow.offsetTop
     } else {
       dragOffsetX = e.clientX - appWindow.offsetLeft
@@ -116,10 +122,7 @@ const setupWindowDragging = () => {
     }
 
     isDragging = true
-    appWindow.style.transition = 'none'
     document.body.style.userSelect = 'none'
-
-    // Add class for drag styling if desired
     appWindow.classList.add('dragging')
   })
 
@@ -128,13 +131,10 @@ const setupWindowDragging = () => {
       let newX = e.clientX - dragOffsetX
       let newY = e.clientY - dragOffsetY
 
-      // Boundary checks for desktop area
       const desktop = document.querySelector('.pc-desktop')
       if (desktop) {
-        const maxX = desktop.offsetWidth - 100 // Allow some overflow
-        const maxY = desktop.offsetHeight - 40 // Allow some overflow
-
-        // Keep at least part of the window visible
+        const maxX = desktop.offsetWidth - 100
+        const maxY = desktop.offsetHeight - 40
         newX = Math.max(-appWindow.offsetWidth + 100, Math.min(newX, maxX))
         newY = Math.max(0, Math.min(newY, maxY))
       }
@@ -142,19 +142,22 @@ const setupWindowDragging = () => {
       appWindow.style.left = `${newX}px`
       appWindow.style.top = `${newY}px`
 
-      // Store position for restore
-      windowPosition = { x: newX, y: newY }
+      // Update windowPosition continuously for potential restoration later
+      // if not maximizing again
+      windowPosition = {
+        width: appWindow.offsetWidth + 'px',
+        height: appWindow.offsetHeight + 'px',
+        x: newX,
+        y: newY,
+      }
     }
   })
 
   document.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false
-      appWindow.style.transition =
-        'transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), width 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), height 0.25s cubic-bezier(0.1, 0.9, 0.2, 1)'
+      appWindow.style.transition = 'all 0.2s ease-out' // Restore transitions
       document.body.style.userSelect = 'auto'
-
-      // Remove drag styling class
       appWindow.classList.remove('dragging')
     }
   })
@@ -182,36 +185,50 @@ const setupSnapBehavior = () => {
 }
 
 const toggleMaximize = () => {
-  isMaximized = !isMaximized
-  appWindow.classList.toggle('maximized', isMaximized)
-
   const iconSpan = maximizeButton.querySelector('.icon')
 
-  if (isMaximized) {
-    // Store current position before maximizing
-    if (!isDragging) {
-      windowPosition = {
-        x: appWindow.offsetLeft,
-        y: appWindow.offsetTop,
-      }
+  if (!isMaximized) {
+    // Store current state BEFORE maximizing
+    windowPosition = {
+      width: appWindow.offsetWidth + 'px',
+      height: appWindow.offsetHeight + 'px',
+      x: appWindow.offsetLeft,
+      y: appWindow.offsetTop,
     }
+
+    isMaximized = true
+    appWindow.classList.add('maximized')
+
+    // Clear inline styles so the .maximized class can take over
+    appWindow.style.width = ''
+    appWindow.style.height = ''
+    appWindow.style.left = ''
+    appWindow.style.top = ''
+    appWindow.style.transform = '' // Ensure no transform interferes
 
     iconSpan.classList.remove('icon-maximize')
     iconSpan.classList.add('icon-restore')
     maximizeButton.title = 'Restore'
   } else {
+    // Restore state BEFORE removing class
+    isMaximized = false
+    appWindow.classList.remove('maximized')
+
+    if (windowPosition) {
+      appWindow.style.width = windowPosition.width
+      appWindow.style.height = windowPosition.height
+      appWindow.style.left = `${windowPosition.x}px`
+      appWindow.style.top = `${windowPosition.y}px`
+    } else {
+      // Fallback to centering if no position was stored
+      centerWindow()
+    }
+
     iconSpan.classList.remove('icon-restore')
     iconSpan.classList.add('icon-maximize')
     maximizeButton.title = 'Maximize'
-
-    // Restore to previous position
-    if (!isDragging) {
-      appWindow.style.left = `${windowPosition.x}px`
-      appWindow.style.top = `${windowPosition.y}px`
-    }
   }
 
-  // Add animation class
   appWindow.classList.add('size-changing')
   setTimeout(() => {
     appWindow.classList.remove('size-changing')
