@@ -33,10 +33,60 @@ const setDynamicViewportHeight = () => {
     // Only apply this on mobile where 100vh is problematic
     const actualVh = window.innerHeight
     pcDesktopElement.style.height = `${actualVh}px`
-    // console.log(`Set .pc-desktop height to: ${actualVh}px`);
+
+    // Also set the app window and content height to ensure proper space allocation
+    const appWindowEl = document.querySelector('.app-window:not(#logWindow)')
+    if (appWindowEl) {
+      appWindowEl.style.maxHeight = `${actualVh - 44}px` // Account for taskbar
+
+      // Adjust content area height
+      const titlebarHeight =
+        appWindowEl.querySelector('.app-window-titlebar')?.offsetHeight || 38
+      const contentEl = appWindowEl.querySelector('.app-window-content')
+      if (contentEl) {
+        contentEl.style.maxHeight = `${actualVh - 44 - titlebarHeight}px`
+      }
+
+      // Ensure the output area doesn't take up too much space
+      const outputEl = document.getElementById('output')
+      const formEl = document.getElementById('chat-form')
+      const topStatusEl = document.getElementById('top-status-container')
+      const buttonContainerEl = document.querySelector('.button-container')
+
+      if (outputEl && formEl && topStatusEl) {
+        const formHeight = formEl.offsetHeight || 56
+        const statusHeight = topStatusEl.offsetHeight || 20
+        const buttonsHeight = buttonContainerEl?.offsetHeight || 0
+        const availableHeight =
+          actualVh -
+          44 -
+          titlebarHeight -
+          formHeight -
+          statusHeight -
+          buttonsHeight -
+          30 // Extra padding
+        outputEl.style.maxHeight = `${Math.max(50, availableHeight)}px`
+      }
+    }
   } else if (pcDesktopElement) {
     // On desktop, or if media query doesn't match, revert to CSS controlled height
-    pcDesktopElement.style.height = '' // Or set to '100vh' if that's the desktop default
+    pcDesktopElement.style.height = ''
+
+    // Reset any dynamic heights applied to child elements
+    const appWindowEl = document.querySelector('.app-window:not(#logWindow)')
+    if (appWindowEl) {
+      appWindowEl.style.maxHeight = ''
+
+      const contentEl = appWindowEl.querySelector('.app-window-content')
+      if (contentEl) {
+        contentEl.style.maxHeight = ''
+      }
+
+      const outputEl = document.getElementById('output')
+      if (outputEl) {
+        outputEl.style.maxHeight = ''
+      }
+    }
   }
 }
 
@@ -78,7 +128,49 @@ const initpcUI = () => {
 
   setDynamicViewportHeight() // Call on init
   window.addEventListener('resize', setDynamicViewportHeight)
-  window.addEventListener('orientationchange', setDynamicViewportHeight)
+  window.addEventListener('orientationchange', () => {
+    // On orientation change, delay the viewport adjustment slightly to ensure accurate measurements
+    setTimeout(setDynamicViewportHeight, 100)
+  })
+
+  // Add a specific handler for when virtual keyboards appear on mobile
+  if ('visualViewport' in window) {
+    window.visualViewport.addEventListener('resize', () => {
+      // If this is likely a virtual keyboard (height change but not width)
+      if (
+        window.innerWidth === window.visualViewport.width &&
+        window.innerHeight > window.visualViewport.height
+      ) {
+        const keyboardHeight = window.innerHeight - window.visualViewport.height
+
+        // Adjust the form position to be visible above the keyboard
+        const formEl = document.getElementById('chat-form')
+        if (formEl && keyboardHeight > 50) {
+          // Only adjust if keyboard is likely present
+          formEl.style.position = 'fixed'
+          formEl.style.bottom = `${keyboardHeight}px`
+
+          // Also adjust the output area to make room
+          const outputEl = document.getElementById('output')
+          if (outputEl) {
+            outputEl.style.marginBottom = `${keyboardHeight + 20}px`
+          }
+        }
+      } else {
+        // Reset when keyboard is hidden
+        const formEl = document.getElementById('chat-form')
+        if (formEl) {
+          formEl.style.position = 'sticky'
+          formEl.style.bottom = '0'
+
+          const outputEl = document.getElementById('output')
+          if (outputEl) {
+            outputEl.style.marginBottom = '8px'
+          }
+        }
+      }
+    })
+  }
 
   setupWindowDragging()
   setupWindowControls()

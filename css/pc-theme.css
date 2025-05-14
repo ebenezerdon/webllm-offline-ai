@@ -1077,6 +1077,8 @@ button#submit-button .icon-send {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    max-height: 100%;
   }
 
   .app-window:not(#logWindow) {
@@ -1084,6 +1086,7 @@ button#submit-button .icon-send {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    max-height: calc(100% - 44px);
   }
 
   .app-window:not(#logWindow) .app-window-titlebar {
@@ -1098,6 +1101,7 @@ button#submit-button .icon-send {
     flex-direction: column;
     padding: 0;
     min-height: 0;
+    max-height: calc(100vh - 44px - 38px);
   }
 
   .main-column {
@@ -1106,12 +1110,16 @@ button#submit-button .icon-send {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    max-height: 100%;
   }
 
   #output {
     flex-grow: 1;
-    min-height: 100px;
+    min-height: 50px;
     margin-bottom: 8px;
+    max-height: calc(100vh - 44px - 38px - 120px);
+    overflow-y: auto;
   }
 
   .button-container {
@@ -1126,10 +1134,14 @@ button#submit-button .icon-send {
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
   }
 
   #top-status-container {
     display: block;
+    margin-bottom: 8px;
   }
 
   #status-container {
@@ -1157,201 +1169,70 @@ button#submit-button .icon-send {
     border-radius: 1px;
   }
 
-  .start-menu {
-    width: 92vw;
-    max-width: 450px;
-    max-height: 85vh;
-    bottom: 54px;
-    padding: 18px;
-    margin: 0 auto 10px auto;
-    overflow-y: auto;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%) translateY(20px);
+  form#chat-form button {
+    flex-shrink: 0;
+  }
+
+  .top-status-container {
+    margin-bottom: 10px;
+    padding: 8px;
+  }
+
+  input#prompt {
+    padding: 8px 12px;
+    height: 40px;
+  }
+
+  .app-window-content {
+    overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-    box-sizing: border-box;
   }
 
-  .start-menu.active {
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .start-menu::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .start-menu::-webkit-scrollbar-thumb {
-    border: 1px solid var(--win11-scrollbar-track);
-  }
-
-  .start-menu-header h2 {
-    font-size: 18px;
-  }
-
-  .social-media-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .social-media-item {
-    padding: 16px 10px;
-  }
-
-  .social-media-item .icon {
-    width: 28px;
-    height: 28px;
-    margin-bottom: 8px;
-  }
-
-  .social-media-item span {
-    font-size: 13px;
-  }
-
-  .start-menu-footer {
-    margin-top: 16px;
-    padding-top: 12px;
-  }
-
-  .start-menu::after {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-  }
-
-  .start-menu.active + .app-window {
-    filter: brightness(0.8);
-    transition: filter 0.3s ease;
-  }
-
-  #logWindow {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    width: 90vw;
-    height: 60vh;
-    max-width: 500px;
-    max-height: 450px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1200;
-    background-color: #2b2b2b;
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(0, 0, 0, 0.22);
-  }
-
-  #logWindow .app-window-titlebar {
-    background-color: white;
-    color: var(--win11-window-titlebar-text);
-  }
-
-  #logWindow .app-window-titlebar-title .icon {
-    filter: none;
-  }
-
-  #logWindow .app-window-controls button {
-    color: #f0f0f0;
-  }
-
-  #logWindow .app-window-controls button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  #logWindow .app-window-controls button.close-button:hover {
-    background-color: #c75050;
-  }
-
-  #logWindow .app-window-content {
-    flex-grow: 1;
-    overflow-y: auto;
-    height: 100%;
-    background-color: #2b2b2b;
-  }
-
-  #logWindow #debug {
-    padding: 10px;
-    font-size: 11px;
-    line-height: 1.4;
-    height: 100%;
-    box-sizing: border-box;
-    background-color: #2b2b2b;
-    color: #a9b7c6;
-    border: none;
-    border-radius: 0;
-  }
-
+  /* Ensure sidebar column is hidden on mobile */
   .sidebar-column {
     display: none;
   }
 }
 
-/* Extra small mobile devices */
+/* Extra small mobile devices - even more compact UI */
 @media (max-width: 480px) {
-  .start-menu {
-    width: 94vw;
-    max-width: none;
-    padding: 16px 14px;
-    border-radius: 10px;
-    margin: 0 auto 8px auto;
-    bottom: 52px;
+  .app-window-content {
+    padding: 0 !important;
   }
 
-  .start-menu-header h2 {
-    font-size: 16px;
+  .main-column {
+    padding: 8px;
   }
 
-  .social-media-grid {
-    gap: 8px;
+  #output {
+    min-height: 40px;
+    max-height: calc(100vh - 44px - 38px - 110px);
   }
 
-  .social-media-item {
-    padding: 12px 8px;
-  }
-
-  .social-media-item .icon {
-    width: 24px;
-    height: 24px;
+  .top-status-container {
+    padding: 6px;
     margin-bottom: 6px;
   }
 
-  .social-media-item span {
-    font-size: 12px;
+  input#prompt {
+    height: 38px;
+    padding: 6px 10px;
   }
 
-  .user-avatar {
-    width: 36px;
-    height: 36px;
+  form#chat-form button {
+    padding: 6px 10px;
   }
 
-  .user-name {
-    font-size: 13px;
+  .button-container {
+    margin-bottom: 6px;
   }
 
-  .user-status {
-    font-size: 11px;
+  #clear-chat .icon + span {
+    display: none;
   }
 
-  .user-status::before {
-    width: 6px;
-    height: 6px;
-  }
-
-  .power-button {
-    width: 36px;
-    height: 36px;
-  }
-
-  .power-button .icon {
-    width: 18px;
-    height: 18px;
+  #submit-button .icon + span {
+    display: none;
   }
 }
 
