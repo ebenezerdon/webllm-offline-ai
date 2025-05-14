@@ -660,6 +660,11 @@ button#submit-button .icon-send {
   #status-container {
     display: none;
   }
+
+  .model-info,
+  .resource-warning {
+    display: none !important;
+  }
 }
 
 @media (min-width: 769px) {
