@@ -15,11 +15,14 @@ let taskbarLogButton
 let logWindow = null
 let originalDebugParent = null
 let debugElement = null
+let startButton = null
+let startMenu = null
 
 let isDragging = false
 let dragOffsetX, dragOffsetY
 let isMaximized = false
 let windowPosition = { x: 0, y: 0 }
+let isStartMenuOpen = false
 
 const initpcUI = () => {
   appWindow = document.getElementById('webLlmAppWindow')
@@ -32,6 +35,9 @@ const initpcUI = () => {
   taskbarDate = document.getElementById('taskbarDate')
   taskbarLogButton = document.getElementById('taskbarLogButton')
   debugElement = document.getElementById('debug')
+  startButton = document.querySelector('.taskbar-start-button')
+  startMenu = document.getElementById('startMenu')
+
   if (debugElement) {
     originalDebugParent = debugElement.parentNode
   }
@@ -44,7 +50,9 @@ const initpcUI = () => {
     !closeButton ||
     !taskbarAppIcon ||
     !taskbarClock ||
-    !taskbarLogButton
+    !taskbarLogButton ||
+    !startButton ||
+    !startMenu
   ) {
     console.error('pc UI elements not found. Aborting UI initialization.')
     return
@@ -54,6 +62,7 @@ const initpcUI = () => {
   setupWindowControls()
   setupTaskbar()
   setupLogWindowInteractions()
+  setupStartMenu()
   updateClock()
 
   // Update clock every minute
@@ -478,7 +487,121 @@ const setupLogWindowInteractions = () => {
   }
 }
 
+const setupStartMenu = () => {
+  // Toggle start menu on click
+  startButton.addEventListener('click', toggleStartMenu)
+
+  // Also add touchstart for better mobile responsiveness
+  startButton.addEventListener('touchstart', (e) => {
+    e.preventDefault() // Prevent default touch behavior
+    toggleStartMenu(e)
+  })
+
+  // Close start menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (
+      isStartMenuOpen &&
+      !startMenu.contains(e.target) &&
+      !startButton.contains(e.target)
+    ) {
+      toggleStartMenu(null, false) // Force close
+    }
+  })
+
+  // Handle escape key press to close start menu
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isStartMenuOpen) {
+      toggleStartMenu(null, false) // Force close
+    }
+  })
+
+  // Add bounce effect to start button when clicked
+  startButton.addEventListener('mousedown', () => {
+    startButton.classList.add('pulse')
+    setTimeout(() => {
+      startButton.classList.remove('pulse')
+    }, 300)
+  })
+
+  // Handle power button click
+  const powerButton = startMenu.querySelector('.power-button')
+  if (powerButton) {
+    powerButton.addEventListener('click', () => {
+      // Simple implementation - just close the start menu
+      toggleStartMenu(null, false)
+    })
+  }
+
+  // Add hover effect for social media items
+  const socialMediaItems = startMenu.querySelectorAll('.social-media-item')
+  socialMediaItems.forEach((item) => {
+    item.addEventListener('mouseenter', () => {
+      item.style.transform = 'translateY(-3px)'
+      item.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.08)'
+    })
+
+    item.addEventListener('mouseleave', () => {
+      item.style.transform = ''
+      item.style.boxShadow = ''
+    })
+
+    // Add touch effect for mobile
+    item.addEventListener('touchstart', () => {
+      item.style.transform = 'translateY(-3px)'
+      item.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.08)'
+    })
+
+    item.addEventListener('touchend', () => {
+      setTimeout(() => {
+        item.style.transform = ''
+        item.style.boxShadow = ''
+      }, 150)
+    })
+  })
+
+  // Add swipe down to close functionality
+  let touchStartY = 0
+  let touchEndY = 0
+
+  startMenu.addEventListener(
+    'touchstart',
+    (e) => {
+      touchStartY = e.changedTouches[0].screenY
+    },
+    { passive: true },
+  )
+
+  startMenu.addEventListener(
+    'touchend',
+    (e) => {
+      touchEndY = e.changedTouches[0].screenY
+
+      // If swipe down of at least 50px
+      if (touchEndY - touchStartY > 50) {
+        toggleStartMenu(null, false) // Close the menu
+      }
+    },
+    { passive: true },
+  )
+}
+
+const toggleStartMenu = (e, forceState) => {
+  if (e) e.stopPropagation()
+
+  // If forceState is provided, use it, otherwise toggle
+  isStartMenuOpen = forceState !== undefined ? forceState : !isStartMenuOpen
+
+  if (isStartMenuOpen) {
+    startMenu.classList.add('active')
+    startButton.classList.add('active')
+  } else {
+    startMenu.classList.remove('active')
+    startButton.classList.remove('active')
+  }
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initpcUI)
 
+// Make the function accessible outside this module
 export { initpcUI }
