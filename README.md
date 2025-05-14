@@ -1,4 +1,4 @@
-# WebLLM Chat - pc Edition
+# WebLLM Offline AI Assistant
 
 This is a browser-based LLM chat application that runs AI models directly in your browser using WebGPU technology, presented with a **pc-themed desktop interface**.
 All processing happens locally on your device. No server required.
