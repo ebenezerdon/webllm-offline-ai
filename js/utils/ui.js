@@ -49,46 +49,6 @@ export const calculateRemainingTime = (elapsedMs, percent) => {
 }
 
 /**
- * Update model info display
- * @param {HTMLElement} modelInfoEl - Model info container element
- * @param {HTMLElement} sizeEl - Size display element
- * @param {HTMLElement} vramEl - VRAM display element
- * @param {HTMLElement} paramsEl - Parameters display element
- * @param {HTMLOptionElement} selectedOption - Selected option from dropdown
- */
-export const updateModelInfo = (
-  modelInfoEl,
-  sizeEl,
-  vramEl,
-  paramsEl,
-  selectedOption,
-) => {
-  if (!modelInfoEl || !sizeEl || !vramEl || !paramsEl) return
-
-  if (selectedOption) {
-    const downloadSize = selectedOption.dataset.size || '--'
-    const vramRequired = selectedOption.dataset.vram || '--'
-    const params = selectedOption.dataset.params || '--'
-
-    sizeEl.textContent = downloadSize
-    vramEl.textContent = vramRequired
-    paramsEl.textContent = params
-
-    // Only update display style if not on mobile or if we haven't loaded a model yet
-    const isMobile = window.innerWidth <= 1024
-    const modelLoaded =
-      document.getElementById('prompt') &&
-      !document.getElementById('prompt').disabled
-
-    if (!isMobile || !modelLoaded) {
-      modelInfoEl.style.display = 'block'
-    }
-  } else {
-    modelInfoEl.style.display = 'none'
-  }
-}
-
-/**
  * Check if WebGPU is supported in the current browser
  * @returns {boolean} - True if WebGPU is supported
  * @throws {Error} - If WebGPU is not supported
@@ -124,9 +84,6 @@ export const populateModelSelect = (selectEl, modelGroups) => {
       option.value = model.id
       option.textContent = model.name
       option.dataset.size = model.size
-      option.dataset.vram = model.vram
-      option.dataset.params = model.params
-
       optgroup.appendChild(option)
     })
 

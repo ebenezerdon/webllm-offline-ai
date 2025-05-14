@@ -9,7 +9,7 @@ import {
   logBrowserInfo,
   logStatus,
 } from './utils/logger.js'
-import { populateModelSelect, updateModelInfo } from './utils/ui.js'
+import { populateModelSelect } from './utils/ui.js'
 import LLMModel from './models/llm-model.js'
 import {
   getLastUsedModel,
@@ -61,7 +61,6 @@ class App {
         for (let i = 0; i < modelSelect.options.length; i++) {
           if (modelSelect.options[i].value === lastModel.modelId) {
             modelSelect.selectedIndex = i
-            this.updateModelInfoDisplay()
             this.updateResourceWarning()
             break
           }
@@ -181,9 +180,6 @@ class App {
     // Populate model dropdown
     populateModelSelect(this.elements.modelSelect, MODEL_DATA)
 
-    // Initialize model info display
-    this.updateModelInfoDisplay()
-
     // Log available models for debugging
     this.logModelAvailability()
   }
@@ -251,15 +247,14 @@ class App {
     } finally {
       // Re-enable inputs
       this.setInputsState(true)
-      this.elements.prompt.focus()
     }
   }
 
   /**
-   * Handle model select change
+   * Handle model selection change
    */
   handleModelSelectChange() {
-    this.updateModelInfoDisplay()
+    // Update resource warning
     this.updateResourceWarning()
   }
 
@@ -267,76 +262,48 @@ class App {
    * Handle load model button click
    */
   async handleLoadModelClick() {
-    if (this.isModelLoading) return
+    if (this.isModelLoading) {
+      logDebug('Model is already loading')
+      return
+    }
 
     const selectedModel = this.elements.modelSelect.value
-    logDebug(`User selected model: ${selectedModel}`)
+    if (!selectedModel) {
+      logDebug('No model selected')
+      return
+    }
 
-    // Disable inputs during loading
-    this.isModelLoading = true
     this.setLoadingState(true)
-
-    const modelOptions = Array.from(this.elements.modelSelect.options)
-    const selectedOption = modelOptions.find(
-      (opt) => opt.value === selectedModel,
-    )
-    const modelName = selectedOption
-      ? selectedOption.textContent
-      : selectedModel
-
-    logStatus(`Loading model: ${modelName}...`, true)
 
     try {
       await this.model.loadModel(selectedModel)
+
+      // Save as last used model
+      const selectedOption =
+        this.elements.modelSelect.options[
+          this.elements.modelSelect.selectedIndex
+        ]
+      await saveLastUsedModel(selectedModel, {
+        name: selectedOption.textContent,
+        size: selectedOption.dataset.size,
+      })
+
+      // Enable the chat interface
       this.setInputsState(true)
-
-      // Save the model as last used
-      const modelInfo = {
-        name: modelName,
-        timestamp: new Date().toISOString(),
-      }
-      await saveLastUsedModel(selectedModel, modelInfo)
-      logDebug(`Saved ${selectedModel} as last used model`)
-
-      // Hide model info on mobile after successful load
-      if (window.innerWidth <= 1024) {
-        this.elements.modelInfo.style.display = 'none'
-      }
     } catch (error) {
       logDebug(`Error in handleLoadModelClick: ${error.message}`)
+      this.setInputsState(false)
     } finally {
-      this.isModelLoading = false
       this.setLoadingState(false)
     }
   }
 
   /**
-   * Update model info display
-   */
-  updateModelInfoDisplay() {
-    const selectedOption =
-      this.elements.modelSelect.options[this.elements.modelSelect.selectedIndex]
-
-    updateModelInfo(
-      this.elements.modelInfo,
-      this.elements.modelDownloadSize,
-      this.elements.modelVram,
-      this.elements.modelParams,
-      selectedOption,
-    )
-
-    // On mobile, hide model info if model is already loaded
-    if (window.innerWidth <= 1024 && this.model.isReady()) {
-      this.elements.modelInfo.style.display = 'none'
-    }
-  }
-
-  /**
-   * Update resource warning display
+   * Update resource warning based on selected model
    */
   updateResourceWarning() {
     const selectedModel = this.elements.modelSelect.value
-    const modelSize = MODEL_SIZES[selectedModel] || 'medium'
+    const modelSize = MODEL_SIZES[selectedModel]
 
     if (modelSize === 'large') {
       this.elements.resourceWarning.style.display = 'block'
@@ -346,45 +313,36 @@ class App {
   }
 
   /**
-   * Set input elements state
+   * Set enabled state of input elements
    * @param {boolean} enabled - Whether inputs should be enabled
    */
   setInputsState(enabled) {
     this.elements.prompt.disabled = !enabled
-    if (this.elements.submitButton) {
-      this.elements.submitButton.disabled = !enabled
-    }
+    this.elements.submitButton.disabled = !enabled
   }
 
   /**
-   * Set loading state
-   * @param {boolean} isLoading - Whether the model is loading
+   * Set loading state of the interface
+   * @param {boolean} isLoading - Whether the interface is in a loading state
    */
   setLoadingState(isLoading) {
+    this.isModelLoading = isLoading
     this.elements.loadModelButton.disabled = isLoading
-    this.elements.progressContainer.style.display = isLoading ? 'block' : 'none'
+    this.elements.modelSelect.disabled = isLoading
   }
 
   /**
-   * Log model availability for debugging
+   * Log available models for debugging
    */
   logModelAvailability() {
-    const availableModels = prebuiltAppConfig.model_list.map((m) => m.model_id)
-    logDebug(`Available models: ${availableModels.slice(0, 10).join(', ')}...`)
-    logDebug(`Total available models: ${availableModels.length}`)
-
-    // Check if our dropdown models are in the available list
     const dropdownModels = Array.from(this.elements.modelSelect.options).map(
       (opt) => opt.value,
     )
-    dropdownModels.forEach((model) => {
-      const isAvailable = availableModels.includes(model)
-      logDebug(
-        `Model ${model} is ${
-          isAvailable ? 'available' : 'NOT available'
-        } in prebuiltAppConfig`,
-      )
-    })
+    logDebug(
+      `Available models in dropdown: ${dropdownModels
+        .filter(Boolean)
+        .join(', ')}`,
+    )
   }
 
   /**
@@ -395,21 +353,10 @@ class App {
   }
 
   /**
-   * Handle window resize events
+   * Handle window resize
    */
   handleWindowResize() {
-    // Only adjust visibility if model is loaded
-    if (this.model.isReady()) {
-      if (window.innerWidth <= 1024) {
-        // On mobile, hide model info after model loaded
-        this.elements.modelInfo.style.display = 'none'
-      } else {
-        // On desktop, always show model info after selection
-        if (this.elements.modelSelect.value) {
-          this.elements.modelInfo.style.display = 'block'
-        }
-      }
-    }
+    // No need to handle model info visibility anymore
   }
 }
 
