@@ -1039,7 +1039,97 @@ button#submit-button .icon-send {
 
 /* MOBILE specific rules (max-width: 768px) */
 @media (max-width: 768px) {
-  /* On mobile, show in main column and hide in status panel */
+  body {
+    overflow: hidden;
+  }
+
+  .pc-taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1010;
+    padding: 0 8px;
+    height: 44px;
+  }
+
+  .pc-taskbar .taskbar-start-button span:not(.icon) {
+    display: none;
+  }
+
+  .pc-taskbar .taskbar-start-button {
+    padding: 0 8px;
+    min-width: auto;
+  }
+
+  .pc-taskbar .taskbar-app-icon {
+    margin: 0 2px;
+  }
+
+  .pc-taskbar .taskbar-clock {
+    font-size: 11px;
+    right: 8px;
+  }
+
+  .pc-desktop {
+    height: 100vh;
+    padding-bottom: 44px; /* Space for the fixed taskbar */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-window:not(#logWindow) {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Allow shrinking if content is small, crucial for flex scroll */
+  }
+
+  .app-window:not(#logWindow) .app-window-titlebar {
+    flex-shrink: 0;
+  }
+
+  .app-window:not(#logWindow) .app-window-content {
+    flex-grow: 1;
+    overflow-y: auto; /* Primary scroll container */
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    min-height: 0; /* Crucial for scrollable flex child */
+  }
+
+  .main-column {
+    /* remove flex-grow: 1; height determined by content */
+    width: 100%; /* Ensure it takes full width of parent */
+    padding: 12px;
+    box-sizing: border-box; /* Include padding in width */
+    display: flex;
+    flex-direction: column;
+  }
+
+  #output {
+    flex-grow: 1; /* This will expand to push form down */
+    min-height: 100px;
+    margin-bottom: 8px;
+  }
+
+  .button-container {
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  form#chat-form {
+    padding: 8px 0;
+    background: var(--win11-window-bg);
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  /* ... (rest of the mobile styles from previous correct state) ... */
   #top-status-container {
     display: block;
   }
@@ -1054,7 +1144,7 @@ button#submit-button .icon-send {
   }
 
   #taskbarLogButton {
-    display: flex; /* Show the log button on mobile */
+    display: flex;
   }
 
   #taskbarLogButton.active::after {
@@ -1069,19 +1159,18 @@ button#submit-button .icon-send {
     border-radius: 1px;
   }
 
-  /* Mobile-specific Start Menu styles */
   .start-menu {
     width: 92vw;
     max-width: 450px;
     max-height: 85vh;
-    bottom: 58px; /* Small buffer from taskbar */
+    bottom: 54px;
     padding: 18px;
     margin: 0 auto 10px auto;
     overflow-y: auto;
     left: 50%;
     right: auto;
     transform: translateX(-50%) translateY(20px);
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
     border-radius: 12px;
     box-sizing: border-box;
   }
@@ -1091,11 +1180,11 @@ button#submit-button .icon-send {
   }
 
   .start-menu::-webkit-scrollbar {
-    width: 6px; /* Thinner scrollbar on mobile */
+    width: 6px;
   }
 
   .start-menu::-webkit-scrollbar-thumb {
-    border: 1px solid var(--win11-scrollbar-track); /* Smaller border */
+    border: 1px solid var(--win11-scrollbar-track);
   }
 
   .start-menu-header h2 {
@@ -1126,7 +1215,6 @@ button#submit-button .icon-send {
     padding-top: 12px;
   }
 
-  /* Add a subtle indication that the menu can be swiped down to close */
   .start-menu::after {
     content: '';
     position: absolute;
@@ -1139,7 +1227,6 @@ button#submit-button .icon-send {
     border-radius: 4px;
   }
 
-  /* When start menu is open, apply a subtle backdrop to the desktop */
   .start-menu.active + .app-window {
     filter: brightness(0.8);
     transition: filter 0.3s ease;
@@ -1203,75 +1290,8 @@ button#submit-button .icon-send {
     border-radius: 0;
   }
 
-  /* Hide desktop sidebar column on mobile */
   .sidebar-column {
     display: none;
-  }
-
-  /* Adjustments for main app window on mobile if they were missed or need to be reinforced */
-  .pc-desktop {
-    padding: 0;
-    height: calc(100vh - 48px);
-    overflow: hidden;
-  }
-
-  .app-window:not(#logWindow) {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    max-height: none;
-    position: relative;
-    transform: none !important;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-  }
-
-  .app-window:not(#logWindow) .app-window-content {
-    height: calc(100% - 38px);
-    overflow: hidden;
-  }
-
-  .main-column {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  #output {
-    min-height: 150px;
-  }
-
-  form#chat-form {
-    position: sticky;
-    bottom: 0;
-    padding: 12px 0;
-    background: var(--win11-window-bg);
-    margin: 0;
-    z-index: 100;
-  }
-
-  @keyframes start-menu-appear {
-    0% {
-      opacity: 0;
-      transform: translateX(-50%) translateY(20px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-  }
-
-  @keyframes start-menu-disappear {
-    0% {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-    100% {
-      opacity: 0;
-      transform: translateX(-50%) translateY(20px);
-    }
   }
 }
 
