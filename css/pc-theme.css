@@ -535,6 +535,7 @@ body {
   transform: scale(0.8) translateY(150%);
   opacity: 0;
   pointer-events: none;
+  z-index: -1;
 }
 
 .app-window.maximized {
@@ -1336,6 +1337,63 @@ button#submit-button .icon-send {
   /* Ensure sidebar column is hidden on mobile */
   .sidebar-column {
     display: none;
+  }
+
+  /* Ensure stronger minimized enforcement for mobile */
+  .app-window.minimized {
+    transform: scale(0.7) translateY(200%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1 !important; /* Use !important to ensure it's always applied */
+    visibility: hidden !important; /* Additional property to ensure it's hidden */
+    transition: none !important; /* Prevent any transitions interfering with animation */
+  }
+
+  /* Improve animations for mobile */
+  .app-window.minimizing {
+    animation: win11-minimize-mobile 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+    pointer-events: none !important;
+    overflow: hidden !important; /* Prevent content from showing outside the window */
+  }
+
+  /* Fix for button flashing - immediately hide content when minimizing starts */
+  .app-window.minimizing .main-column {
+    opacity: 0 !important;
+    transition: opacity 0.05s ease !important;
+  }
+
+  .app-window.minimizing .button-container,
+  .app-window.minimizing form#chat-form {
+    opacity: 0 !important;
+    transition: opacity 0.01s ease !important;
+  }
+
+  .app-window.restoring {
+    animation: win11-restore-mobile 0.3s cubic-bezier(0, 0, 0.2, 1) forwards !important;
+    z-index: 10 !important;
+    visibility: visible !important;
+  }
+
+  @keyframes win11-minimize-mobile {
+    from {
+      transform: scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: scale(0.7) translateY(200%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes win11-restore-mobile {
+    from {
+      transform: scale(0.7) translateY(200%);
+      opacity: 0.5;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 }
 
