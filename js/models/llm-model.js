@@ -338,8 +338,19 @@ Key points about your capabilities:
       // Show the progress container
       this.elements.progressContainer.style.display = 'block'
 
+      // Also show the status panel progress container if it exists
+      if (this.elements.statusProgressContainer) {
+        this.elements.statusProgressContainer.style.display = 'block'
+      }
+
       // Enable indeterminate progress animation
       this.elements.progressFill.className = 'progress-fill indeterminate'
+
+      // Also set indeterminate animation for status panel progress bar
+      if (this.elements.statusProgressFill) {
+        this.elements.statusProgressFill.className =
+          'progress-fill indeterminate'
+      }
 
       this.engine = await CreateMLCEngine(modelId, {
         initProgressCallback: (progress) => {
@@ -352,9 +363,21 @@ Key points about your capabilities:
 
           // Parse progress and calculate percentage
           if (progress && typeof progress === 'object' && progress.text) {
-            if ('progress' in progress) {
+            // Check for [current/total] pattern in the text
+            const cacheMatch = progress.text.match(/\[(\d+)\/(\d+)\]/)
+            if (cacheMatch && cacheMatch.length === 3) {
+              const current = parseInt(cacheMatch[1])
+              const total = parseInt(cacheMatch[2])
+              if (total > 0) {
+                percent = Math.floor((current / total) * 100)
+              }
+            }
+            // If no match or percent is still 0, check for progress property
+            else if ('progress' in progress) {
               percent = Math.floor(progress.progress * 100)
-            } else {
+            }
+            // As a fallback, check for explicit percentage in the text
+            else {
               const percentMatch = progress.text.match(/(\d+)% completed/)
               if (percentMatch && percentMatch.length >= 2) {
                 percent = parseInt(percentMatch[1])
@@ -375,6 +398,12 @@ Key points about your capabilities:
           this.elements.progressFill.className = 'progress-fill'
           this.elements.progressFill.style.marginLeft = '0'
 
+          // Also reset indeterminate styling for status panel progress bar
+          if (this.elements.statusProgressFill) {
+            this.elements.statusProgressFill.className = 'progress-fill'
+            this.elements.statusProgressFill.style.marginLeft = '0'
+          }
+
           // Update progress bar and status
           updateProgress(
             this.elements.progressFill,
@@ -382,6 +411,16 @@ Key points about your capabilities:
             this.elements.progressContainer,
             percent,
           )
+
+          // Update status panel progress bar too
+          if (this.elements.statusProgressFill) {
+            updateProgress(
+              this.elements.statusProgressFill,
+              this.elements.statusProgressText,
+              this.elements.statusProgressContainer,
+              percent,
+            )
+          }
 
           // Use downloaded status to determine message
           const messagePrefix = isDownloaded
@@ -396,12 +435,40 @@ Key points about your capabilities:
       this.elements.progressFill.className = 'progress-fill'
       this.elements.progressFill.style.marginLeft = '0'
       this.elements.progressFill.style.width = '100%'
-      this.elements.progressText.textContent = '100%'
+
+      // Also reset status panel progress bar
+      if (this.elements.statusProgressFill) {
+        this.elements.statusProgressFill.className = 'progress-fill'
+        this.elements.statusProgressFill.style.marginLeft = '0'
+        this.elements.statusProgressFill.style.width = '100%'
+      }
+
+      // Make sure the text is set to 100% (for screen readers)
+      if (this.elements.progressText) {
+        this.elements.progressText.textContent = '100%'
+        this.elements.progressText.style.display = 'none' // Keep hidden
+      }
+
+      // Set status panel progress text to 100% too
+      if (this.elements.statusProgressText) {
+        this.elements.statusProgressText.textContent = '100%'
+        this.elements.statusProgressText.style.display = 'none' // Keep hidden
+      }
 
       // Short delay before hiding progress to show completion
       setTimeout(() => {
         this.elements.progressContainer.style.display = 'none'
-      }, 500)
+
+        // Hide status panel progress container too
+        if (this.elements.statusProgressContainer) {
+          this.elements.statusProgressContainer.style.display = 'none'
+        }
+
+        // Hide the status panel blue box temporarily
+        if (this.elements.statusContainer) {
+          this.elements.statusContainer.style.display = 'none'
+        }
+      }, 1000) // Give users a full second to see the 100%
 
       const loadTime = ((Date.now() - downloadStartTime) / 1000).toFixed(1)
 
@@ -412,6 +479,23 @@ Key points about your capabilities:
       } else {
         logStatus(`Model loaded from cache in ${loadTime}s`, true)
       }
+
+      // Show the status container again but with compact styling to remove empty space
+      setTimeout(() => {
+        if (this.elements.statusContainer) {
+          // Apply compact styling to remove extra space
+          this.elements.statusContainer.style.display = 'block'
+          this.elements.statusContainer.style.padding = '8px 16px'
+          this.elements.statusContainer.style.marginBottom = '10px'
+
+          // Remove any bottom borders or separators that might create space
+          if (this.elements.status) {
+            this.elements.status.style.marginBottom = '0'
+            this.elements.status.style.paddingBottom = '0'
+            this.elements.status.style.borderBottom = 'none'
+          }
+        }
+      }, 1200)
 
       // Clear any existing system messages before adding model ready message
       const outputEl = this.elements.output

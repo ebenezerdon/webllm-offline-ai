@@ -39,8 +39,14 @@ export const logDebug = (message) => {
 export const logStatus = (message, isModelStatus = false) => {
   if (!statusEl) return
 
-  if (isModelStatus && topStatusEl) {
-    topStatusEl.textContent = message
+  if (isModelStatus) {
+    // Update the top status container in main chat
+    if (topStatusEl) {
+      topStatusEl.textContent = message
+    }
+
+    // Always update the status div in the sidebar for desktop view
+    statusEl.textContent = message
   } else {
     statusEl.textContent = message
   }

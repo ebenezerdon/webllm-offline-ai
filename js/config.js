@@ -112,4 +112,9 @@ export const ELEMENT_IDS = {
   progressText: 'progress-text',
   resourceWarning: 'resource-warning',
   topStatus: 'top-status',
+  // Status panel progress elements
+  statusContainer: 'status-container',
+  statusProgressContainer: 'status-progress-container',
+  statusProgressFill: 'status-progress-fill',
+  statusProgressText: 'status-progress-text',
 }
