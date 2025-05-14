@@ -734,10 +734,39 @@ select#model-select:focus {
   font-size: 13px;
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .resource-warning .icon {
   margin-right: 10px;
+}
+
+.resource-warning .dismiss-btn {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background-color: rgba(255, 177, 27, 0.2);
+  border: none;
+  color: #774d00;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.resource-warning .dismiss-btn:hover {
+  background-color: rgba(255, 177, 27, 0.4);
+}
+
+.resource-warning .content {
+  flex: 1;
 }
 
 .top-status-container,

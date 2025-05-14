@@ -23,6 +23,7 @@ class App {
     this.elements = {}
     this.model = new LLMModel()
     this.isModelLoading = false
+    this.warningDismissed = false
   }
 
   /**
@@ -167,6 +168,10 @@ class App {
       this.elements[key] = document.getElementById(ELEMENT_IDS[key])
     })
 
+    // Add reference to dismiss button
+    this.elements.dismissWarningButton =
+      document.getElementById('dismiss-warning')
+
     // Simple validation
     if (!this.elements.form || !this.elements.modelSelect) {
       console.error('Required DOM elements not found')
@@ -221,6 +226,14 @@ class App {
       this.elements.clearChatButton.addEventListener(
         'click',
         this.handleClearChatClick.bind(this),
+      )
+    }
+
+    // Dismiss warning button
+    if (this.elements.dismissWarningButton) {
+      this.elements.dismissWarningButton.addEventListener(
+        'click',
+        this.handleDismissWarning.bind(this),
       )
     }
   }
@@ -315,11 +328,25 @@ class App {
     const selectedModel = this.elements.modelSelect.value
     const modelSize = MODEL_SIZES[selectedModel]
 
+    // Check if warning has been dismissed for this session
+    if (this.warningDismissed) {
+      return
+    }
+
     if (modelSize === 'large') {
       this.elements.resourceWarning.style.display = 'block'
     } else {
       this.elements.resourceWarning.style.display = 'none'
     }
+  }
+
+  /**
+   * Handle dismiss warning button click
+   */
+  handleDismissWarning() {
+    this.elements.resourceWarning.style.display = 'none'
+    this.warningDismissed = true
+    logDebug('Resource warning dismissed')
   }
 
   /**
