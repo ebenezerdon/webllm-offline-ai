@@ -14,6 +14,11 @@ export const updateProgress = (fillEl, textEl, containerEl, percent) => {
 
   containerEl.style.display = 'block'
   fillEl.style.width = `${percent}%`
+
+  // Hide the progress text since it's redundant with the status message
+  textEl.style.display = 'none'
+
+  // Still update the text content in case it's needed elsewhere
   textEl.textContent = `${percent}%`
 }
 
