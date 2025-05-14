@@ -67,9 +67,7 @@ class App {
         }
 
         // Load the model automatically
-        await this.handleLoadModelClick()
-
-        // No need to load conversation again as we already loaded it
+        await this.loadSelectedModel()
       } else {
         logDebug('No previous model found in database')
       }
@@ -92,7 +90,6 @@ class App {
         // Display conversation without model
         this.model.displayConversation()
 
-        // No need to show status message - chat history is visible
         logDebug(
           `Loaded conversation with ${conversationHistory.length} messages`,
         )
@@ -200,12 +197,6 @@ class App {
       this.handleModelSelectChange.bind(this),
     )
 
-    // Load model button
-    this.elements.loadModelButton.addEventListener(
-      'click',
-      this.handleLoadModelClick.bind(this),
-    )
-
     // Clear chat button
     if (this.elements.clearChatButton) {
       this.elements.clearChatButton.addEventListener(
@@ -213,9 +204,6 @@ class App {
         this.handleClearChatClick.bind(this),
       )
     }
-
-    // Window resize listener for responsive behavior
-    window.addEventListener('resize', this.handleWindowResize.bind(this))
   }
 
   /**
@@ -226,7 +214,7 @@ class App {
     e.preventDefault()
 
     if (!this.model.isReady()) {
-      logDebug('No model loaded. Please load a model first.')
+      logDebug('No model loaded. Please select a model first.')
       return
     }
 
@@ -253,15 +241,18 @@ class App {
   /**
    * Handle model selection change
    */
-  handleModelSelectChange() {
+  async handleModelSelectChange() {
     // Update resource warning
     this.updateResourceWarning()
+
+    // Load the selected model
+    await this.loadSelectedModel()
   }
 
   /**
-   * Handle load model button click
+   * Load the currently selected model
    */
-  async handleLoadModelClick() {
+  async loadSelectedModel() {
     if (this.isModelLoading) {
       logDebug('Model is already loading')
       return
@@ -291,7 +282,7 @@ class App {
       // Enable the chat interface
       this.setInputsState(true)
     } catch (error) {
-      logDebug(`Error in handleLoadModelClick: ${error.message}`)
+      logDebug(`Error loading model: ${error.message}`)
       this.setInputsState(false)
     } finally {
       this.setLoadingState(false)
@@ -327,7 +318,6 @@ class App {
    */
   setLoadingState(isLoading) {
     this.isModelLoading = isLoading
-    this.elements.loadModelButton.disabled = isLoading
     this.elements.modelSelect.disabled = isLoading
   }
 
@@ -350,13 +340,6 @@ class App {
    */
   logSystemInfo() {
     logBrowserInfo()
-  }
-
-  /**
-   * Handle window resize
-   */
-  handleWindowResize() {
-    // No need to handle model info visibility anymore
   }
 }
 
