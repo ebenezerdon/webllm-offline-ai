@@ -8,7 +8,12 @@ import {
   updateProgress,
   checkWebGPUSupport,
 } from '../utils/ui.js'
-import { saveConversation, getLastConversation } from '../utils/db.js'
+import {
+  saveConversation,
+  getLastConversation,
+  isModelDownloaded,
+  markModelDownloaded,
+} from '../utils/db.js'
 
 export default class LLMModel {
   constructor() {
@@ -315,19 +320,20 @@ Key points about your capabilities:
       )
       const downloadSize = selectedOption ? selectedOption.dataset.size : '?'
 
-      logDebug(`Starting to load model: ${modelId} (size: ${downloadSize})`)
-      logStatus(
-        `Starting model download (${downloadSize}). This may take a while for the first time...`,
-        true,
-      )
+      // Check if model has been downloaded before
+      const isDownloaded = await isModelDownloaded(modelId)
+
+      if (isDownloaded) {
+        logStatus('Loading model from cache...', true)
+      } else {
+        logStatus(
+          `Downloading model (${downloadSize}). This may take a while...`,
+          true,
+        )
+      }
 
       let progressReceived = false
       let downloadStartTime = Date.now()
-
-      // Setup cache loading indicator with indeterminate progress
-      let cacheLoadingInterval = null
-      let cacheLoadingDots = 0
-      let cacheLoadingElapsed = 0
 
       // Show the progress container
       this.elements.progressContainer.style.display = 'block'
@@ -335,74 +341,31 @@ Key points about your capabilities:
       // Enable indeterminate progress animation
       this.elements.progressFill.className = 'progress-fill indeterminate'
 
-      // Callback to update cache loading status
-      const updateCacheLoadingIndicator = () => {
-        cacheLoadingDots = (cacheLoadingDots + 1) % 4
-        const dots = '.'.repeat(cacheLoadingDots)
-        cacheLoadingElapsed += 0.5
-
-        // Update status message instead of chat display
-        logStatus(
-          `Loading from cache${dots} (${cacheLoadingElapsed.toFixed(1)}s)`,
-          true,
-        )
-      }
-
-      // Start cache loading indicator
-      cacheLoadingInterval = setInterval(updateCacheLoadingIndicator, 500)
-
-      // Initial call to show immediately
-      updateCacheLoadingIndicator()
-
       this.engine = await CreateMLCEngine(modelId, {
         initProgressCallback: (progress) => {
           progressReceived = true
 
           // Log the raw progress for debugging
           logDebug(`Raw progress value: ${JSON.stringify(progress)}`)
-          logDebug(`Progress type: ${typeof progress}`)
 
           let percent = 0
-          let isCache = false
 
-          // First check if it's a cache loading operation
+          // Parse progress and calculate percentage
           if (progress && typeof progress === 'object' && progress.text) {
-            const cacheMatch = progress.text.match(/cache\[(\d+)\/(\d+)\]/)
-            if (cacheMatch && cacheMatch.length >= 3) {
-              isCache = true
-              const [_, current, total] = cacheMatch
-              percent = Math.floor((parseInt(current) / parseInt(total)) * 100)
-              logDebug(
-                `Cache loading progress: ${current}/${total} = ${percent}%`,
-              )
-            }
-            // If not cache loading, check for regular progress
-            else if ('progress' in progress) {
+            if ('progress' in progress) {
               percent = Math.floor(progress.progress * 100)
-              logDebug(
-                `Regular progress: ${percent}% (progress.progress = ${progress.progress})`,
-              )
-            }
-            // Try to extract percentage from text as fallback
-            else {
+            } else {
               const percentMatch = progress.text.match(/(\d+)% completed/)
               if (percentMatch && percentMatch.length >= 2) {
                 percent = parseInt(percentMatch[1])
-                logDebug(
-                  `Progress from text: ${percent}% (matched from: ${progress.text})`,
-                )
               }
             }
-          }
-          // Handle direct number progress
-          else if (typeof progress === 'number' && !isNaN(progress)) {
+          } else if (typeof progress === 'number' && !isNaN(progress)) {
             percent = Math.floor(progress * 100)
-            logDebug(`Progress from number: ${percent}% (raw = ${progress})`)
           }
 
           // Ensure percent is valid
           percent = Math.max(0, Math.min(100, percent))
-          logDebug(`Final calculated progress: ${percent}%`)
 
           // Calculate estimated time remaining
           const elapsedMs = Date.now() - downloadStartTime
@@ -420,15 +383,14 @@ Key points about your capabilities:
             percent,
           )
 
-          // Update status message instead of chat display
-          const messagePrefix = isCache ? 'Loading from cache' : 'Loading model'
+          // Use downloaded status to determine message
+          const messagePrefix = isDownloaded
+            ? 'Loading from cache'
+            : 'Downloading model'
           logStatus(`${messagePrefix}... ${percent}%${remainingTime}`, true)
         },
         useIndexedDBCache: true,
       })
-
-      // Stop cache loading indicator
-      clearInterval(cacheLoadingInterval)
 
       // Reset progress bar styling and show complete
       this.elements.progressFill.className = 'progress-fill'
@@ -443,15 +405,13 @@ Key points about your capabilities:
 
       const loadTime = ((Date.now() - downloadStartTime) / 1000).toFixed(1)
 
-      if (!progressReceived) {
-        logDebug(
-          'No progress callbacks were received - likely loaded from cache',
-        )
+      // If this was a new download, mark it as downloaded for next time
+      if (!isDownloaded) {
+        await markModelDownloaded(modelId)
+        logStatus(`Model downloaded and loaded in ${loadTime}s`, true)
+      } else {
         logStatus(`Model loaded from cache in ${loadTime}s`, true)
       }
-
-      // Log status message of completion
-      logStatus(`Model ${modelId} loaded successfully in ${loadTime}s`, true)
 
       // Clear any existing system messages before adding model ready message
       const outputEl = this.elements.output

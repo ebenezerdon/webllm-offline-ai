@@ -10,6 +10,7 @@ db.version(20).stores({
   conversations: '++id, timestamp',
   preferences: 'key',
   models: 'id',
+  downloadedModels: 'modelId', // Track which models have been downloaded
 })
 
 /**
@@ -138,6 +139,36 @@ export const getLastUsedModel = async () => {
   } catch (error) {
     console.error('Failed to get last used model:', error)
     return null
+  }
+}
+
+/**
+ * Check if a model has been downloaded before
+ * @param {string} modelId - Model ID to check
+ * @returns {Promise<boolean>} Whether the model exists in downloaded models
+ */
+export const isModelDownloaded = async (modelId) => {
+  try {
+    const model = await db.downloadedModels.get(modelId)
+    return !!model
+  } catch (error) {
+    console.error('Failed to check downloaded model:', error)
+    return false
+  }
+}
+
+/**
+ * Mark a model as downloaded
+ * @param {string} modelId - Model ID to mark as downloaded
+ */
+export const markModelDownloaded = async (modelId) => {
+  try {
+    await db.downloadedModels.put({
+      modelId,
+      downloadedAt: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Failed to mark model as downloaded:', error)
   }
 }
 
