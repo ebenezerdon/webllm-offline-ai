@@ -92,21 +92,354 @@ body {
 .taskbar-start-button {
   background-color: transparent;
   color: var(--win11-text-color);
-  padding: 0;
+  padding: 0 16px;
   height: 36px;
-  width: 36px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   margin-right: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s ease;
+  transition: all 0.15s ease;
+  position: relative;
+  font-family: var(--win11-font-family);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.taskbar-start-button .icon {
+  margin-right: 8px;
+  width: 22px;
+  height: 22px;
 }
 
 .taskbar-start-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.taskbar-start-button.active {
+  background-color: rgba(0, 120, 212, 0.1);
+}
+
+.taskbar-start-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background-color: var(--win11-accent-light);
+  border-radius: 1.5px;
+}
+
+.taskbar-start-button.pulse {
+  animation: taskbar-pulse 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+/* --- Start Menu --- */
+.start-menu {
+  position: absolute;
+  bottom: 54px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  width: 600px;
+  height: auto;
+  max-height: calc(100vh - 70px);
+  background-color: rgba(243, 243, 243, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+  z-index: 1001;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.start-menu.active {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  animation: start-menu-appear 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.start-menu:not(.active) {
+  animation: start-menu-disappear 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.start-menu-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.start-menu-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--win11-text-color);
+  background: linear-gradient(135deg, #000, #404040);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.search-box {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  width: calc(100% - 2px);
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.search-box:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.search-box:focus-within {
+  border-color: var(--win11-accent-light);
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+}
+
+.search-box .icon {
+  margin-right: 12px;
+  opacity: 0.7;
+  width: 18px;
+  height: 18px;
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  font-family: var(--win11-font-family);
+  color: var(--win11-text-color);
+}
+
+.social-media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.social-media-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 16px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+  text-decoration: none;
+  color: var(--win11-text-color);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Specific styles for each social media platform */
+.social-media-item.github {
+  background-color: rgba(245, 245, 245, 0.9);
+}
+
+.social-media-item.github:hover {
+  background-color: rgba(240, 240, 240, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.social-media-item.linkedin {
+  background-color: rgba(230, 240, 255, 0.9);
+}
+
+.social-media-item.linkedin:hover {
+  background-color: rgba(225, 235, 250, 0.95);
+  border-color: rgba(10, 102, 194, 0.2);
+}
+
+.social-media-item.twitter {
+  background-color: rgba(235, 248, 255, 0.9);
+}
+
+.social-media-item.twitter:hover {
+  background-color: rgba(230, 243, 250, 0.95);
+  border-color: rgba(29, 161, 242, 0.2);
+}
+
+.social-media-item.youtube {
+  background-color: rgba(255, 240, 240, 0.9);
+}
+
+.social-media-item.youtube:hover {
+  background-color: rgba(250, 235, 235, 0.95);
+  border-color: rgba(255, 0, 0, 0.2);
+}
+
+.social-media-item.facebook {
+  background-color: rgba(235, 240, 250, 0.9);
+}
+
+.social-media-item.facebook:hover {
+  background-color: rgba(230, 235, 245, 0.95);
+  border-color: rgba(24, 119, 242, 0.2);
+}
+
+.social-media-item.contact {
+  background-color: rgba(255, 245, 240, 0.9);
+}
+
+.social-media-item.contact:hover {
+  background-color: rgba(250, 240, 235, 0.95);
+  border-color: rgba(212, 70, 56, 0.2);
+}
+
+.social-media-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.8;
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+
+.social-media-item:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+  color: var(--win11-text-color);
+}
+
+.social-media-item:hover::before {
+  opacity: 0.4;
+}
+
+.social-media-item .icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 10px;
+  z-index: 1;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.social-media-item:hover .icon {
+  transform: scale(1.08);
+}
+
+.social-media-item span {
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1;
+  position: relative;
+}
+
+.user-status {
+  font-size: 12px;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  color: #2e7d32; /* Green for online status */
+}
+
+.user-status::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #2e7d32; /* Green dot */
+  border-radius: 50%;
+  margin-right: 6px;
+  box-shadow: 0 0 4px rgba(46, 125, 50, 0.4);
+}
+
+.start-menu-footer {
+  display: flex;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  margin-right: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.3s ease;
+}
+
+.user-avatar:hover img {
+  transform: scale(1.05);
+}
+
+.user-info {
+  flex-grow: 1;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.power-button {
+  background-color: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  outline: none;
+}
+
+.power-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.power-button .icon {
+  width: 20px;
+  height: 20px;
 }
 
 .taskbar-app-icon {
@@ -511,6 +844,32 @@ form#chat-form {
   margin-top: 14px;
 }
 
+.search-box {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  border: 1px solid var(--win11-input-border);
+  padding: 8px 12px;
+  margin-bottom: 20px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.search-box .icon {
+  margin-right: 8px;
+  opacity: 0.6;
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  font-family: var(--win11-font-family);
+  color: var(--win11-text-color);
+}
+
 input#prompt {
   flex-grow: 1;
   padding: 10px 14px;
@@ -710,6 +1069,82 @@ button#submit-button .icon-send {
     border-radius: 1px;
   }
 
+  /* Mobile-specific Start Menu styles */
+  .start-menu {
+    width: 92vw;
+    max-width: 450px;
+    max-height: 85vh;
+    bottom: 58px; /* Small buffer from taskbar */
+    padding: 18px;
+    margin: 0 auto 10px auto;
+    overflow-y: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(20px);
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    border-radius: 12px;
+    box-sizing: border-box;
+  }
+
+  .start-menu.active {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .start-menu::-webkit-scrollbar {
+    width: 6px; /* Thinner scrollbar on mobile */
+  }
+
+  .start-menu::-webkit-scrollbar-thumb {
+    border: 1px solid var(--win11-scrollbar-track); /* Smaller border */
+  }
+
+  .start-menu-header h2 {
+    font-size: 18px;
+  }
+
+  .social-media-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .social-media-item {
+    padding: 16px 10px;
+  }
+
+  .social-media-item .icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 8px;
+  }
+
+  .social-media-item span {
+    font-size: 13px;
+  }
+
+  .start-menu-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+
+  /* Add a subtle indication that the menu can be swiped down to close */
+  .start-menu::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+
+  /* When start menu is open, apply a subtle backdrop to the desktop */
+  .start-menu.active + .app-window {
+    filter: brightness(0.8);
+    transition: filter 0.3s ease;
+  }
+
   #logWindow {
     display: flex;
     flex-direction: column;
@@ -816,6 +1251,90 @@ button#submit-button .icon-send {
     margin: 0;
     z-index: 100;
   }
+
+  @keyframes start-menu-appear {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  @keyframes start-menu-disappear {
+    0% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+    }
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .start-menu {
+    width: 94vw;
+    max-width: none;
+    padding: 16px 14px;
+    border-radius: 10px;
+    margin: 0 auto 8px auto;
+    bottom: 52px;
+  }
+
+  .start-menu-header h2 {
+    font-size: 16px;
+  }
+
+  .social-media-grid {
+    gap: 8px;
+  }
+
+  .social-media-item {
+    padding: 12px 8px;
+  }
+
+  .social-media-item .icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 6px;
+  }
+
+  .social-media-item span {
+    font-size: 12px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  .user-status {
+    font-size: 11px;
+  }
+
+  .user-status::before {
+    width: 6px;
+    height: 6px;
+  }
+
+  .power-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .power-button .icon {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 /* --- pc 11 Animations --- */
@@ -874,18 +1393,18 @@ button#submit-button .icon-send {
 }
 
 @keyframes win11-close {
-  from {
+  0% {
     transform: scale(1);
     opacity: 1;
   }
-  to {
+  100% {
     transform: scale(0.9);
     opacity: 0;
   }
 }
 
 .app-window.bounce {
-  animation: win11-bounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: win11-bounce 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
 @keyframes win11-bounce {
@@ -986,4 +1505,26 @@ button#submit-button .icon-send {
   animation: logWindow-disappear 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
   /* Ensure pointer events are none during disappearing animation */
   pointer-events: none;
+}
+
+@keyframes start-menu-appear {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes start-menu-disappear {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
 }
