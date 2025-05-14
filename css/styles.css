@@ -240,6 +240,7 @@ button.secondary-button:hover:not(:disabled) {
   margin-top: 5px;
   font-size: 0.9rem;
   color: #666;
+  display: none; /* Hide by default */
 }
 
 .resource-warning {
