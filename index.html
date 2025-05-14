@@ -12,59 +12,78 @@
   </head>
   <body>
     <h1>Chat with LLM (In your browser)</h1>
-    <div class="controls">
-      <select id="model-select"></select>
-      <button id="load-model">Load Model</button>
-      <button
-        id="clear-chat"
-        class="secondary-button"
-        title="Clear conversation history"
-      >
-        Clear Chat
-      </button>
-    </div>
-    <div id="model-info" class="model-info">
-      <div class="model-details">
-        <div class="model-detail">
-          <span class="model-detail-icon">📦</span>
-          <span class="model-detail-label">Download Size:</span>
-          <span id="model-download-size" class="model-detail-value">--</span>
+
+    <!-- Begin two-column layout -->
+    <div class="layout-container">
+      <!-- Controls span across both columns -->
+      <div class="controls">
+        <select id="model-select"></select>
+        <button id="load-model">Load Model</button>
+        <button
+          id="clear-chat"
+          class="secondary-button"
+          title="Clear conversation history"
+        >
+          Clear Chat
+        </button>
+      </div>
+
+      <!-- Main column - chat interface -->
+      <div class="main-column">
+        <div id="model-info" class="model-info">
+          <div class="model-details">
+            <div class="model-detail">
+              <span class="model-detail-icon">📦</span>
+              <span class="model-detail-label">Download Size:</span>
+              <span id="model-download-size" class="model-detail-value"
+                >--</span
+              >
+            </div>
+            <div class="model-detail">
+              <span class="model-detail-icon">🧠</span>
+              <span class="model-detail-label">VRAM Required:</span>
+              <span id="model-vram" class="model-detail-value">--</span>
+            </div>
+            <div class="model-detail">
+              <span class="model-detail-icon">🔢</span>
+              <span class="model-detail-label">Parameters:</span>
+              <span id="model-params" class="model-detail-value">--</span>
+            </div>
+          </div>
         </div>
-        <div class="model-detail">
-          <span class="model-detail-icon">🧠</span>
-          <span class="model-detail-label">VRAM Required:</span>
-          <span id="model-vram" class="model-detail-value">--</span>
+
+        <div id="resource-warning" class="resource-warning">
+          <strong>Note:</strong> Large models require significant GPU resources.
+          If your device has limited capabilities, consider using smaller
+          models.
         </div>
-        <div class="model-detail">
-          <span class="model-detail-icon">🔢</span>
-          <span class="model-detail-label">Parameters:</span>
-          <span id="model-params" class="model-detail-value">--</span>
+
+        <!-- Loading status area at the top -->
+        <div id="top-status-container" class="top-status-container">
+          <div id="top-status" class="top-status"></div>
+          <div id="progress-container" style="display: none">
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div id="progress-text" class="progress-text">0%</div>
+          </div>
         </div>
+
+        <div id="output">Select a model and click "Load Model" to begin</div>
+        <form id="chat-form">
+          <input id="prompt" placeholder="Type your question..." disabled />
+          <button id="submit-button" type="submit" disabled>Send</button>
+        </form>
+      </div>
+
+      <!-- Sidebar column - status and debug logs -->
+      <div class="sidebar-column">
+        <h3>Status & Debug</h3>
+        <div id="status" class="status"></div>
+        <div id="debug" class="debug"></div>
       </div>
     </div>
-    <div id="resource-warning" class="resource-warning">
-      <strong>Note:</strong> Large models require significant GPU resources. If
-      your device has limited capabilities, consider using smaller models.
-    </div>
-
-    <!-- New loading status area at the top -->
-    <div id="top-status-container" class="top-status-container">
-      <div id="top-status" class="top-status"></div>
-      <div id="progress-container" style="display: none">
-        <div class="progress-bar">
-          <div id="progress-fill" class="progress-fill"></div>
-        </div>
-        <div id="progress-text" class="progress-text">0%</div>
-      </div>
-    </div>
-
-    <div id="output">Select a model and click "Load Model" to begin</div>
-    <form id="chat-form">
-      <input id="prompt" placeholder="Type your question..." disabled />
-      <button id="submit-button" type="submit" disabled>Send</button>
-    </form>
-    <div id="status" class="status"></div>
-    <div id="debug" class="debug"></div>
+    <!-- End two-column layout -->
 
     <!-- Dexie.js for IndexedDB operations -->
     <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
