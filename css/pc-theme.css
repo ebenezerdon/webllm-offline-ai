@@ -675,46 +675,61 @@ button#submit-button .icon-send {
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
+  body {
+    height: 100%;
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+
   .pc-desktop {
     padding: 0;
+    height: calc(100vh - 48px);
+    overflow: hidden;
   }
 
   .app-window {
     width: 100%;
-    height: calc(100vh - 48px);
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    position: static;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    position: relative;
     transform: none !important;
-    opacity: 1 !important;
-  }
-
-  .app-window.maximized,
-  .app-window.minimized {
-    width: 100%;
-    height: calc(100vh - 48px);
-    top: 0;
-    left: 0;
   }
 
   .app-window-content {
-    flex-direction: column;
+    height: calc(100% - 38px);
+    overflow: hidden;
   }
 
   .main-column {
-    border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-    overflow-y: visible;
-  }
-
-  .sidebar-column {
-    max-height: 40vh;
+    flex: 1;
+    padding: 16px;
+    height: calc(100vh - 200px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   #output {
-    min-height: 200px;
+    height: calc(100% - 120px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  form#chat-form {
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    background: var(--win11-window-bg);
+    border-top: 1px solid var(--win11-window-border);
+    margin: 0;
+    z-index: 100;
+  }
+
+  .sidebar-column {
+    display: none;
   }
 }
 
