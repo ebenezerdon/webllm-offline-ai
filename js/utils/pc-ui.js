@@ -182,9 +182,19 @@ const initpcUI = () => {
   // Update clock every minute
   setInterval(updateClock, 60000)
 
-  // Center window initially if not maximized
-  if (!isMaximized) {
-    centerWindow()
+  // Automatically maximize window on mobile devices
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    // Use a slight delay to ensure all elements are properly initialized
+    setTimeout(() => {
+      if (!isMaximized) {
+        toggleMaximize()
+      }
+    }, 100)
+  } else {
+    // Center window initially if not maximized and not on mobile
+    if (!isMaximized) {
+      centerWindow()
+    }
   }
 
   // Add snap behavior when window is dragged to top edge

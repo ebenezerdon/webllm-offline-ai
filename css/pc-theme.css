@@ -674,7 +674,7 @@ select#model-select {
 select#model-select:focus {
   border-color: var(--win11-input-focus-border);
   outline: none;
-  box-shadow: 0 0 0 2px var(--win11-focus-outline);
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
 }
 
 .model-info {
@@ -1188,6 +1188,139 @@ button#submit-button .icon-send {
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Start Menu mobile styles */
+  .start-menu {
+    width: 92vw;
+    max-width: 450px;
+    max-height: 85vh;
+    bottom: 54px;
+    padding: 18px;
+    margin: 0 auto 10px auto;
+    overflow-y: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(20px);
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    box-sizing: border-box;
+  }
+
+  .start-menu.active {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .start-menu::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .start-menu::-webkit-scrollbar-thumb {
+    border: 1px solid var(--win11-scrollbar-track);
+  }
+
+  .start-menu-header h2 {
+    font-size: 18px;
+  }
+
+  .social-media-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .social-media-item {
+    padding: 16px 10px;
+  }
+
+  .social-media-item .icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 8px;
+  }
+
+  .social-media-item span {
+    font-size: 13px;
+  }
+
+  .start-menu-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+
+  .start-menu::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+
+  .start-menu.active + .app-window {
+    filter: brightness(0.8);
+    transition: filter 0.3s ease;
+  }
+
+  /* Log window styles */
+  #logWindow {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    width: 90vw;
+    height: 60vh;
+    max-width: 500px;
+    max-height: 450px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1200;
+    background-color: #2b2b2b;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(0, 0, 0, 0.22);
+  }
+
+  #logWindow .app-window-titlebar {
+    background-color: white;
+    color: var(--win11-window-titlebar-text);
+  }
+
+  #logWindow .app-window-titlebar-title .icon {
+    filter: none;
+  }
+
+  #logWindow .app-window-controls button {
+    color: #f0f0f0;
+  }
+
+  #logWindow .app-window-controls button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  #logWindow .app-window-controls button.close-button:hover {
+    background-color: #c75050;
+  }
+
+  #logWindow .app-window-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    height: 100%;
+    background-color: #2b2b2b;
+  }
+
+  #logWindow #debug {
+    padding: 10px;
+    font-size: 11px;
+    line-height: 1.4;
+    height: 100%;
+    box-sizing: border-box;
+    background-color: #2b2b2b;
+    color: #a9b7c6;
+    border: none;
+    border-radius: 0;
+  }
+
   /* Ensure sidebar column is hidden on mobile */
   .sidebar-column {
     display: none;
@@ -1227,12 +1360,73 @@ button#submit-button .icon-send {
     margin-bottom: 6px;
   }
 
+  /* Reduce visual elements to save space */
   #clear-chat .icon + span {
     display: none;
   }
 
   #submit-button .icon + span {
     display: none;
+  }
+
+  /* Extra small device start menu styles */
+  .start-menu {
+    width: 94vw;
+    max-width: none;
+    padding: 16px 14px;
+    border-radius: 10px;
+    margin: 0 auto 8px auto;
+    bottom: 52px;
+  }
+
+  .start-menu-header h2 {
+    font-size: 16px;
+  }
+
+  .social-media-grid {
+    gap: 8px;
+  }
+
+  .social-media-item {
+    padding: 12px 8px;
+  }
+
+  .social-media-item .icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 6px;
+  }
+
+  .social-media-item span {
+    font-size: 12px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  .user-status {
+    font-size: 11px;
+  }
+
+  .user-status::before {
+    width: 6px;
+    height: 6px;
+  }
+
+  .power-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .power-button .icon {
+    width: 18px;
+    height: 18px;
   }
 }
 
