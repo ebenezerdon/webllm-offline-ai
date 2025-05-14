@@ -61,4 +61,4 @@ The `pc-ui.js` script handles the visual aspects of the windowing (dragging, min
 
 ## License
 
-MIT
+GNU GPL v3
