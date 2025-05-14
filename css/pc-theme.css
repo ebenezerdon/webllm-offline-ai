@@ -1202,10 +1202,10 @@ button#submit-button .icon-send {
   .start-menu {
     width: 92vw;
     max-width: 450px;
-    max-height: 85vh;
-    bottom: 54px;
+    max-height: 75vh;
+    bottom: 120px;
     padding: 18px;
-    margin: 0 auto 10px auto;
+    margin: 0 auto;
     overflow-y: auto;
     left: 50%;
     right: auto;
@@ -1386,8 +1386,8 @@ button#submit-button .icon-send {
     max-width: none;
     padding: 16px 14px;
     border-radius: 10px;
-    margin: 0 auto 8px auto;
-    bottom: 52px;
+    margin: 0 auto;
+    bottom: 100px;
   }
 
   .start-menu-header h2 {
