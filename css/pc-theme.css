@@ -1072,8 +1072,8 @@ button#submit-button .icon-send {
   }
 
   .pc-desktop {
-    height: 100vh;
-    padding-bottom: 44px; /* Space for the fixed taskbar */
+    min-height: -webkit-fill-available;
+    padding-bottom: 44px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -1083,7 +1083,7 @@ button#submit-button .icon-send {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0; /* Allow shrinking if content is small, crucial for flex scroll */
+    min-height: 0;
   }
 
   .app-window:not(#logWindow) .app-window-titlebar {
@@ -1092,25 +1092,24 @@ button#submit-button .icon-send {
 
   .app-window:not(#logWindow) .app-window-content {
     flex-grow: 1;
-    overflow-y: auto; /* Primary scroll container */
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     padding: 0;
-    min-height: 0; /* Crucial for scrollable flex child */
+    min-height: 0;
   }
 
   .main-column {
-    /* remove flex-grow: 1; height determined by content */
-    width: 100%; /* Ensure it takes full width of parent */
+    width: 100%;
     padding: 12px;
-    box-sizing: border-box; /* Include padding in width */
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
   }
 
   #output {
-    flex-grow: 1; /* This will expand to push form down */
+    flex-grow: 1;
     min-height: 100px;
     margin-bottom: 8px;
   }
@@ -1129,7 +1128,6 @@ button#submit-button .icon-send {
     flex-shrink: 0;
   }
 
-  /* ... (rest of the mobile styles from previous correct state) ... */
   #top-status-container {
     display: block;
   }
