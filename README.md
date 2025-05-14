@@ -59,6 +59,17 @@ To run the application locally:
 This application uses [web-llm](https://github.com/mlc-ai/web-llm), a project that compiles LLMs to WebGPU for browser execution. The UI is styled to mimic a pc desktop environment. When you load a model, it downloads the model weights (which may take some time). Subsequent loads use the cached version from IndexedDB.
 The `pc-ui.js` script handles the visual aspects of the windowing (dragging, minimize, maximize, close simulation) and the taskbar.
 
+## Connect With the Developer
+
+If you find this project useful, please consider:
+
+- ⭐ Giving this repo a star on GitHub
+- 📺 Checking out my YouTube channel: [youtube.com/ebenezerdon](https://youtube.com/ebenezerdon)
+- 🔗 Connecting with me on LinkedIn: [linkedin.com/in/ebenezerdon](https://linkedin.com/in/ebenezerdon)
+- 🐦 Following me on X: [x.com/ebenezerDN](https://x.com/ebenezerDN)
+
+Your support helps me continue creating open-source projects like this one!
+
 ## License
 
 GNU GPL v3
