@@ -48,6 +48,7 @@ class App {
   async tryLoadLastUsedModel() {
     try {
       const lastModel = await getLastUsedModel()
+      const modelSelect = this.elements.modelSelect
 
       if (lastModel && lastModel.modelId) {
         logStatus(
@@ -57,7 +58,6 @@ class App {
         logDebug(`Auto-loading model: ${lastModel.modelId}`)
 
         // Set the model dropdown to the last used model
-        const modelSelect = this.elements.modelSelect
         for (let i = 0; i < modelSelect.options.length; i++) {
           if (modelSelect.options[i].value === lastModel.modelId) {
             modelSelect.selectedIndex = i
@@ -69,10 +69,29 @@ class App {
         // Load the model automatically
         await this.loadSelectedModel()
       } else {
-        logDebug('No previous model found in database')
+        logDebug('No previous model found in database, loading default model')
+
+        // Set Qwen 2.5 1.5B as the default model
+        const defaultModelId = 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC'
+
+        // Find and select the default model in dropdown
+        for (let i = 0; i < modelSelect.options.length; i++) {
+          if (modelSelect.options[i].value === defaultModelId) {
+            modelSelect.selectedIndex = i
+            this.updateResourceWarning()
+            logStatus(
+              `Loading default model: ${modelSelect.options[i].textContent}...`,
+              true,
+            )
+            break
+          }
+        }
+
+        // Load the default model
+        await this.loadSelectedModel()
       }
     } catch (error) {
-      logDebug(`Error loading last model: ${error.message}`)
+      logDebug(`Error loading model: ${error.message}`)
     }
   }
 
