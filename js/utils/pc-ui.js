@@ -11,6 +11,10 @@ let closeButton
 let taskbarAppIcon
 let taskbarClock
 let taskbarDate
+let taskbarLogButton
+let logWindow = null
+let originalDebugParent = null
+let debugElement = null
 
 let isDragging = false
 let dragOffsetX, dragOffsetY
@@ -26,6 +30,11 @@ const initpcUI = () => {
   taskbarAppIcon = document.getElementById('taskbarWebLlmApp')
   taskbarClock = document.getElementById('taskbarClock')
   taskbarDate = document.getElementById('taskbarDate')
+  taskbarLogButton = document.getElementById('taskbarLogButton')
+  debugElement = document.getElementById('debug')
+  if (debugElement) {
+    originalDebugParent = debugElement.parentNode
+  }
 
   if (
     !appWindow ||
@@ -34,7 +43,8 @@ const initpcUI = () => {
     !maximizeButton ||
     !closeButton ||
     !taskbarAppIcon ||
-    !taskbarClock
+    !taskbarClock ||
+    !taskbarLogButton
   ) {
     console.error('pc UI elements not found. Aborting UI initialization.')
     return
@@ -43,6 +53,7 @@ const initpcUI = () => {
   setupWindowDragging()
   setupWindowControls()
   setupTaskbar()
+  setupLogWindowInteractions()
   updateClock()
 
   // Update clock every minute
@@ -334,6 +345,137 @@ const applyWindowAnimations = () => {
 
   // Mark taskbar app as active initially
   taskbarAppIcon.classList.add('active')
+}
+
+const createLogWindowHTML = () => {
+  return `
+    <div class="app-window-titlebar" id="logWindowTitlebar">
+      <div class="app-window-titlebar-title">
+        <span class="icon icon-debug"></span>
+        <span>Debug Log</span>
+      </div>
+      <div class="app-window-controls">
+        <button class="close-button" id="logWindowCloseButtonDynamic" title="Close Log">
+          <span class="icon icon-close"></span>
+        </button>
+      </div>
+    </div>
+    <div class="app-window-content" id="logWindowMainContentDynamic">
+      <!-- Debug content will be moved here -->
+    </div>
+  `
+}
+
+const toggleLogWindow = () => {
+  if (!taskbarLogButton || !debugElement || !originalDebugParent) {
+    console.warn('Log window elements not found, cannot toggle.')
+    return
+  }
+
+  const desktopElement = document.querySelector('.pc-desktop')
+  if (!desktopElement) {
+    console.error('PC Desktop element not found.')
+    return
+  }
+
+  if (!logWindow) {
+    // Create window if it doesn't exist
+    logWindow = document.createElement('div')
+    logWindow.className = 'app-window' // Use existing app-window styles
+    logWindow.id = 'logWindow' // Specific ID for styling
+    logWindow.style.display = 'none' // Start hidden, will show with animation
+    logWindow.innerHTML = createLogWindowHTML()
+    desktopElement.appendChild(logWindow)
+
+    // Attach event listener to its close button
+    const closeButton = logWindow.querySelector('#logWindowCloseButtonDynamic')
+    if (closeButton) {
+      closeButton.addEventListener('click', (e) => {
+        e.preventDefault() // Prevent any default behavior
+        e.stopPropagation() // Stop event propagation
+
+        // Apply disappearing animation
+        logWindow.classList.add('disappearing')
+        taskbarLogButton.classList.remove('active')
+
+        // Wait for animation to complete before hiding and moving content back
+        setTimeout(() => {
+          logWindow.style.display = 'none'
+          logWindow.classList.remove('disappearing')
+
+          // Move #debug back to its original parent
+          if (
+            originalDebugParent &&
+            debugElement.parentNode !== originalDebugParent
+          ) {
+            originalDebugParent.appendChild(debugElement)
+          }
+        }, 180) // Match animation duration from CSS
+      })
+    }
+  }
+
+  // Toggle visibility with animation
+  const isHidden =
+    logWindow.style.display === 'none' || logWindow.style.display === ''
+
+  if (isHidden) {
+    // First move #debug into the log window before showing it
+    const logContentArea = logWindow.querySelector(
+      '#logWindowMainContentDynamic',
+    )
+    if (logContentArea && debugElement.parentNode !== logContentArea) {
+      logContentArea.appendChild(debugElement)
+    }
+
+    // Then show with animation
+    requestAnimationFrame(() => {
+      logWindow.style.display = 'flex'
+
+      // Force a reflow to ensure the browser recognizes the display change before adding animation
+      logWindow.offsetHeight
+
+      logWindow.classList.add('appearing')
+      taskbarLogButton.classList.add('active')
+
+      // Remove animation class after it completes
+      setTimeout(() => {
+        logWindow.classList.remove('appearing')
+      }, 230) // Match animation duration from CSS
+    })
+  } else {
+    // Apply disappearing animation
+    logWindow.classList.add('disappearing')
+    taskbarLogButton.classList.remove('active')
+
+    // Wait for animation to complete before hiding and moving content back
+    setTimeout(() => {
+      logWindow.style.display = 'none'
+      logWindow.classList.remove('disappearing')
+
+      // Move #debug back to its original parent
+      if (
+        originalDebugParent &&
+        debugElement.parentNode !== originalDebugParent
+      ) {
+        originalDebugParent.appendChild(debugElement)
+      }
+    }, 180) // Match animation duration from CSS
+  }
+}
+
+const setupLogWindowInteractions = () => {
+  if (taskbarLogButton) {
+    taskbarLogButton.addEventListener('click', toggleLogWindow)
+
+    // Pulse effect for log button too
+    taskbarLogButton.addEventListener('mousedown', () => {
+      taskbarLogButton.classList.add('pulse')
+      setTimeout(() => {
+        taskbarLogButton.classList.remove('pulse')
+      }, 300)
+    })
+  }
 }
 
 // Initialize when DOM is loaded
