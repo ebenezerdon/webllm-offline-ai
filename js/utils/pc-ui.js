@@ -17,12 +17,28 @@ let originalDebugParent = null
 let debugElement = null
 let startButton = null
 let startMenu = null
+let pcDesktopElement = null // Cache the element
 
 let isDragging = false
 let dragOffsetX, dragOffsetY
 let isMaximized = false
 let windowPosition = { x: 0, y: 0 }
 let isStartMenuOpen = false
+
+const setDynamicViewportHeight = () => {
+  if (!pcDesktopElement) {
+    pcDesktopElement = document.querySelector('.pc-desktop')
+  }
+  if (pcDesktopElement && window.matchMedia('(max-width: 768px)').matches) {
+    // Only apply this on mobile where 100vh is problematic
+    const actualVh = window.innerHeight
+    pcDesktopElement.style.height = `${actualVh}px`
+    // console.log(`Set .pc-desktop height to: ${actualVh}px`);
+  } else if (pcDesktopElement) {
+    // On desktop, or if media query doesn't match, revert to CSS controlled height
+    pcDesktopElement.style.height = '' // Or set to '100vh' if that's the desktop default
+  }
+}
 
 const initpcUI = () => {
   appWindow = document.getElementById('webLlmAppWindow')
@@ -37,6 +53,7 @@ const initpcUI = () => {
   debugElement = document.getElementById('debug')
   startButton = document.querySelector('.taskbar-start-button')
   startMenu = document.getElementById('startMenu')
+  pcDesktopElement = document.querySelector('.pc-desktop') // Initialize cached element
 
   if (debugElement) {
     originalDebugParent = debugElement.parentNode
@@ -50,6 +67,7 @@ const initpcUI = () => {
     !closeButton ||
     !taskbarAppIcon ||
     !taskbarClock ||
+    !pcDesktopElement || // Check for pcDesktopElement
     !taskbarLogButton ||
     !startButton ||
     !startMenu
@@ -57,6 +75,10 @@ const initpcUI = () => {
     console.error('pc UI elements not found. Aborting UI initialization.')
     return
   }
+
+  setDynamicViewportHeight() // Call on init
+  window.addEventListener('resize', setDynamicViewportHeight)
+  window.addEventListener('orientationchange', setDynamicViewportHeight)
 
   setupWindowDragging()
   setupWindowControls()
