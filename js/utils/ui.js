@@ -68,7 +68,16 @@ export const updateModelInfo = (
     sizeEl.textContent = downloadSize
     vramEl.textContent = vramRequired
     paramsEl.textContent = params
-    modelInfoEl.style.display = 'block'
+
+    // Only update display style if not on mobile or if we haven't loaded a model yet
+    const isMobile = window.innerWidth <= 1024
+    const modelLoaded =
+      document.getElementById('prompt') &&
+      !document.getElementById('prompt').disabled
+
+    if (!isMobile || !modelLoaded) {
+      modelInfoEl.style.display = 'block'
+    }
   } else {
     modelInfoEl.style.display = 'none'
   }

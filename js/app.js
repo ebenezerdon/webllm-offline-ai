@@ -217,6 +217,9 @@ class App {
         this.handleClearChatClick.bind(this),
       )
     }
+
+    // Window resize listener for responsive behavior
+    window.addEventListener('resize', this.handleWindowResize.bind(this))
   }
 
   /**
@@ -294,6 +297,11 @@ class App {
       }
       await saveLastUsedModel(selectedModel, modelInfo)
       logDebug(`Saved ${selectedModel} as last used model`)
+
+      // Hide model info on mobile after successful load
+      if (window.innerWidth <= 1024) {
+        this.elements.modelInfo.style.display = 'none'
+      }
     } catch (error) {
       logDebug(`Error in handleLoadModelClick: ${error.message}`)
     } finally {
@@ -316,6 +324,11 @@ class App {
       this.elements.modelParams,
       selectedOption,
     )
+
+    // On mobile, hide model info if model is already loaded
+    if (window.innerWidth <= 1024 && this.model.isReady()) {
+      this.elements.modelInfo.style.display = 'none'
+    }
   }
 
   /**
@@ -379,6 +392,24 @@ class App {
    */
   logSystemInfo() {
     logBrowserInfo()
+  }
+
+  /**
+   * Handle window resize events
+   */
+  handleWindowResize() {
+    // Only adjust visibility if model is loaded
+    if (this.model.isReady()) {
+      if (window.innerWidth <= 1024) {
+        // On mobile, hide model info after model loaded
+        this.elements.modelInfo.style.display = 'none'
+      } else {
+        // On desktop, always show model info after selection
+        if (this.elements.modelSelect.value) {
+          this.elements.modelInfo.style.display = 'block'
+        }
+      }
+    }
   }
 }
 
