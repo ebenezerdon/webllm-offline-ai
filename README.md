@@ -1,7 +1,7 @@
 # WebLLM Chat - pc Edition
 
 This is a browser-based LLM chat application that runs AI models directly in your browser using WebGPU technology, now presented with a **pc-themed desktop interface**.
-No server required - all processing happens locally on your device.
+All processing happens locally on your device. No server required.
 
 ## Features
 
