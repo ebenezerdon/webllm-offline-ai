@@ -10,7 +10,7 @@ export const MODEL_SIZES = {
   'DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC': 'medium',
   'Llama-3.1-8B-Instruct-q4f32_1-MLC': 'medium',
   'Hermes-3-Llama-3.1-8B-q4f32_1-MLC': 'medium',
-  'Qwen2.5-32B-Instruct-q4f32_1-MLC': 'large',
+  'HF://mlc-ai/Qwen2.5-32B-Instruct-q4f32_1-MLC': 'large',
   'Phi-3.5-mini-instruct-q4f32_1-MLC': 'large',
   'gemma-2-9b-it-q4f32_1-MLC': 'large',
 }
@@ -75,11 +75,6 @@ export const MODEL_DATA = [
   {
     group: 'Large Models (Powerful but requires high-end GPU)',
     models: [
-      {
-        id: 'Qwen2.5-32B-Instruct-q4f32_1-MLC',
-        name: 'Qwen2.5 32B (32 GB)',
-        size: '32 GB',
-      },
       {
         id: 'Phi-3.5-mini-instruct-q4f32_1-MLC',
         name: 'Phi 3.5 Mini (5.5 GB)',
