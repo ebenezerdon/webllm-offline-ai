@@ -42,3 +42,18 @@ Feel free to modify the app to suit your needs. The entire application is contai
 ## License
 
 This project is open source and available under the MIT License.
+
+## Enhanced Version
+
+For a more feature-rich implementation with additional functionality, check out:
+
+- [WebLLM Offline AI Assistant](https://github.com/ebenezerdon/webllm-offline-ai) - A more advanced version with:
+  - PC-themed desktop interface
+  - Chat history support
+  - IndexedDB caching
+  - Logger
+  - Draggable windows
+  - Taskbar and window controls
+  - Responsive design for mobile and desktop
+
+Live demo: [chat.ebenezerdon.com](https://chat.ebenezerdon.com)
