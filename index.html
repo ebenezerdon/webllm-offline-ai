@@ -2,89 +2,171 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Browser LLM Chat Demo</title>
     <style>
       body {
-        font-family: sans-serif;
-        max-width: 600px;
-        margin: 2rem auto;
-        padding: 1rem;
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+        background-color: #f9fafb;
+        color: #111827;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
       }
+
+      .app-container {
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        overflow: hidden;
+        margin-top: 5rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem;
+        color: #111827;
+      }
+
       #output {
-        background: #f4f4f4;
-        padding: 1rem;
-        min-height: 200px;
-        border: 1px solid #ccc;
+        background: #f3f4f6;
+        padding: 1.25rem;
+        min-height: 220px;
+        border-radius: 12px;
         white-space: pre-wrap;
         overflow-y: auto;
-        max-height: 400px;
+        max-height: 420px;
+        font-size: 0.95rem;
       }
+
       input,
       button,
       select {
-        font-size: 1rem;
-        padding: 0.5rem;
+        font-family: inherit;
+        font-size: 0.95rem;
+        padding: 0.8rem 1rem;
         width: 100%;
-        margin-top: 0.5rem;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        background-color: white;
       }
+
+      button {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.15s;
+      }
+
+      button:hover:not(:disabled) {
+        background-color: #1d4ed8;
+      }
+
+      button:disabled {
+        background-color: #93c5fd;
+        cursor: not-allowed;
+      }
+
       .error {
-        color: red;
-        font-weight: bold;
+        color: #dc2626;
+        background-color: #fee2e2;
+        padding: 0.8rem;
+        border-radius: 10px;
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
       }
+
       .controls {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .chat-container {
+        margin-top: 1.5rem;
         display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
+        flex-direction: column;
+        gap: 1.5rem;
       }
-      .controls button {
-        flex: 1;
+
+      .progress-container {
+        margin-top: 1rem;
       }
+
       .progress-bar {
         width: 100%;
-        height: 20px;
-        background-color: #e0e0e0;
-        border-radius: 4px;
-        margin-top: 10px;
+        height: 8px;
+        background-color: #e5e7eb;
+        border-radius: 999px;
+        overflow: hidden;
       }
+
       .progress-fill {
         height: 100%;
-        background-color: #4caf50;
+        background-color: #2563eb;
         width: 0%;
         transition: width 0.3s ease;
       }
+
       .progress-text {
+        font-size: 0.8rem;
         text-align: center;
-        margin-top: 5px;
+        margin-top: 0.5rem;
+        color: #6b7280;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
       }
     </style>
   </head>
   <body>
-    <h1>Chat with LLM (In your browser)</h1>
-    <div class="controls">
-      <select id="model-select">
-        <option value="SmolLM2-360M-Instruct-q4f32_1-MLC">
-          SmolLM2 360M (Very Small)
-        </option>
-        <option value="Llama-3.1-8B-Instruct-q4f32_1-MLC">
-          Llama 3.1 8B (Medium)
-        </option>
-        <option value="Phi-3.5-mini-instruct-q4f32_1-MLC">
-          Phi 3.5 Mini (Large)
-        </option>
-      </select>
-      <button id="load-model">Load Model</button>
-    </div>
-    <div id="output">Select a model and click "Load Model" to begin</div>
-    <div id="progress-container" style="display: none">
-      <div class="progress-bar">
-        <div id="progress-fill" class="progress-fill"></div>
+    <div class="app-container">
+      <h1>Chat with LLM (In your browser)</h1>
+
+      <div class="controls">
+        <select id="model-select">
+          <option value="SmolLM2-360M-Instruct-q4f32_1-MLC">
+            SmolLM2 360M (Very Small)
+          </option>
+          <option value="Llama-3.1-8B-Instruct-q4f32_1-MLC">
+            Llama 3.1 8B (Medium)
+          </option>
+          <option value="Phi-3.5-mini-instruct-q4f32_1-MLC">
+            Phi 3.5 Mini (Large)
+          </option>
+        </select>
+        <button id="load-model">Load Model</button>
       </div>
-      <div id="progress-text" class="progress-text">0%</div>
+
+      <div class="chat-container">
+        <div id="output">Select a model and click "Load Model" to begin</div>
+
+        <div
+          id="progress-container"
+          class="progress-container"
+          style="display: none"
+        >
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="progress-text" class="progress-text">0%</div>
+        </div>
+
+        <form id="chat-form" class="form-group">
+          <input id="prompt" placeholder="Type your question..." disabled />
+          <button type="submit" disabled>Send</button>
+        </form>
+      </div>
     </div>
-    <form id="chat-form">
-      <input id="prompt" placeholder="Type your question..." disabled />
-      <button type="submit" disabled>Send</button>
-    </form>
 
     <script type="module">
       import { CreateMLCEngine } from 'https://esm.run/@mlc-ai/web-llm@0.2.79'
