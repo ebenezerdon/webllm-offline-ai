@@ -7,12 +7,12 @@ All processing happens locally on your device. No server required.
 
 - **pc Desktop Experience**: Interact with the chat app in a simulated pc environment, complete with a taskbar, draggable window, and window controls (minimize, maximize, close).
 - Run large language models directly in your browser.
-- Choice of models with different sizes and capabilities, selectable via a pc-style dropdown.
-- Progress tracking for model downloads shown in a themed progress bar.
-- Detailed model information (download size, VRAM requirements, parameters) displayed in a styled panel.
-- Responsive design that adapts for a more traditional app feel on desktop and a streamlined view on mobile.
+- Choice of models with different sizes and capabilities.
+- Progress tracking for model downloads and progress bar.
+- Model information (download size, VRAM requirements, parameters).
+- Responsive design that adapts.
 - Clear feedback during download and inference, integrated into the pc UI.
-- Taskbar with a start button (non-functional demo), app icon, and live clock.
+- Taskbar with a start button, app icon, and live clock.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ To run the application locally:
 
 ## How It Works
 
-This application uses [web-llm](https://github.com/mlc-ai/web-llm), a project that compiles LLMs to WebGPU for browser execution. The UI is styled to mimic a pc desktop environment. When you load a model, it downloads the model weights (which may take some time). Subsequent loads use the cached version from IndexedDB.
+This application uses [web-llm](https://github.com/mlc-ai/web-llm), a project that compiles LLMs to WebGPU for browser execution. The UI is structured as a pc desktop environment. When you load a model, it downloads the model weights (which may take some time). Subsequent loads use the cached version from IndexedDB.
 The `pc-ui.js` script handles the visual aspects of the windowing (dragging, minimize, maximize, close simulation) and the taskbar.
 
 ## Connect With the Developer
