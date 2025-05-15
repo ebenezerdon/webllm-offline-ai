@@ -3,6 +3,10 @@
 This is a browser-based LLM chat application that runs AI models directly in your browser using WebGPU technology, presented with a **pc-themed desktop interface**.
 All processing happens locally on your device. No server required. ✨
 
+## 🌟 Live URL
+
+🔗 Use the app at [https://chat.ebenezerdon.com](https://chat.ebenezerdon.com)
+
 ## ✅ Features
 
 - **pc Desktop Experience**: Interact with the chat app in a simulated pc environment, complete with a taskbar, draggable window, and window controls (minimize, maximize, close).
