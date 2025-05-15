@@ -9,12 +9,12 @@ All processing happens locally on your device. No server required. ✨
 
 ## ✅ Features
 
-- **pc Desktop Experience**: Interact with the chat app in a simulated pc environment, complete with a taskbar, draggable window, and window controls (minimize, maximize, close).
-- 🤖 Run large language models directly in your browser.
-- 🔄 Choice of models with different sizes and capabilities.
-- 📊 Progress tracking for model downloads and progress bar.
-- ℹ️ Model information (download size, VRAM requirements, parameters).
-- 📱 Responsive design that adapts.
+- 🖥️ **PC Desktop Experience**: Interact with the chat app in a simulated pc environment, complete with a taskbar, draggable window, and window controls (minimize, maximize, close).
+- 🤖 **Run large language models** directly in your browser.
+- 🔄 **Choice of models** with different sizes and capabilities.
+- 📊 **Progress tracking** for model downloads and progress bar.
+- ℹ️ **Model information** (download size, VRAM requirements, parameters).
+- 📱 **Responsive design** that adapts.
 - 💬 Clear feedback during download and inference, integrated into the pc UI.
 - 🎛️ Taskbar with a start button, app icon, and live clock.
 
